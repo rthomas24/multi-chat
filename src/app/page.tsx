@@ -5,8 +5,15 @@ import Header from '@/components/Header';
 import ChatInterface from '@/components/ChatInterface';
 import { ModelStatus } from '@/types/Status';
 import styles from "./page.module.css";
-import { useState } from "react";
+import { useState, useRef } from "react";
 import AddModelCard from '@/components/AddModelCard';
+import ChatInput from '@/components/ChatInput';
+
+// Add this with the other interfaces at the top
+interface Message {
+  role: 'user' | 'assistant';
+  content: string;
+}
 
 // Add this type at the top of the file
 interface ChatModel {
@@ -15,10 +22,7 @@ interface ChatModel {
   provider: string;
   description: string;
   initialStatus: ModelStatus;
-  messages: {
-    role: 'user' | 'assistant';
-    content: string;
-  }[];
+  messages: Message[];  // Use the Message type here
 }
 
 // Update the chatInterfaces constant to use the type
@@ -103,8 +107,10 @@ const sortByStatus = (a: typeof chatInterfaces[0], b: typeof chatInterfaces[0]) 
 };
 
 export default function Home() {
-  // Update the state to use the type
   const [sortedInterfaces, setSortedInterfaces] = useState<ChatModel[]>(chatInterfaces.sort(sortByStatus));
+  const [isDragging, setIsDragging] = useState(false);
+  const longPressTimeoutRef = useRef<NodeJS.Timeout | undefined>(undefined);
+  const dragItemRef = useRef<number | null>(null);
 
   const handleStatusChange = (index: number, newStatus: ModelStatus) => {
     setSortedInterfaces(prev => {
@@ -141,56 +147,124 @@ export default function Home() {
     });
   };
 
+  const handleLongPressStart = (index: number) => {
+    longPressTimeoutRef.current = setTimeout(() => {
+      setIsDragging(true);
+      dragItemRef.current = index;
+    }, 300); // 1.5 seconds
+  };
+
+  const handleLongPressEnd = () => {
+    if (longPressTimeoutRef.current) {
+      clearTimeout(longPressTimeoutRef.current);
+    }
+  };
+
+  const handleDragStart = (e: React.DragEvent, index: number) => {
+    if (!isDragging) {
+      e.preventDefault();
+      return;
+    }
+    e.dataTransfer.effectAllowed = 'move';
+    dragItemRef.current = index;
+  };
+
+  const handleDragOver = (e: React.DragEvent) => {
+    e.preventDefault();
+    e.dataTransfer.dropEffect = 'move';
+  };
+
+  const handleDrop = (e: React.DragEvent, dropIndex: number) => {
+    e.preventDefault();
+    const dragIndex = dragItemRef.current;
+    
+    if (dragIndex === null || dragIndex === dropIndex) return;
+
+    setSortedInterfaces(prev => {
+      const newItems = [...prev];
+      const dragItem = newItems[dragIndex];
+      newItems.splice(dragIndex, 1);
+      newItems.splice(dropIndex, 0, dragItem);
+      return newItems;
+    });
+
+    setIsDragging(false);
+    dragItemRef.current = null;
+  };
+
+  const handleDragEnd = () => {
+    setIsDragging(false);
+    dragItemRef.current = null;
+    if (longPressTimeoutRef.current) {
+      clearTimeout(longPressTimeoutRef.current);
+    }
+  };
+
+  const handleMessageSent = (message: string) => {
+    // Add message to all active interfaces
+    setSortedInterfaces(prev => 
+      prev.map(chat => ({
+        ...chat,
+        messages: chat.initialStatus === ModelStatus.ACTIVE ? 
+          [...chat.messages, { role: 'user', content: message }] : 
+          chat.messages
+      }))
+    );
+  };
+
+  const handleMessagesUpdate = (id: string, newMessages: Message[]) => {
+    setSortedInterfaces(prev => 
+      prev.map(chat => 
+        chat.id === id ? { ...chat, messages: newMessages } : chat
+      )
+    );
+  };
+
   return (
     <div className={styles.page}>
       <Header />
       <main className={styles.main}>
         <h1 className={styles.heading}>What do you want to know?</h1>
         
-        <div className={styles.inputContainer}>
-          <input 
-            type="text"
-            placeholder="Ask anything..."
-            className={styles.input}
-          />
-          <div className={styles.inputActions}>
-            <button className={styles.deepResearchBtn}>
-              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" className={styles.icon}>
-                <path d="M21 21L16.65 16.65M19 11C19 15.4183 15.4183 19 11 19C6.58172 19 3 15.4183 3 11C3 6.58172 6.58172 3 11 3C15.4183 3 19 6.58172 19 11Z" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
-              </svg>
-              Deep Research
-            </button>
-            <div className={styles.inputButtons}>
-              <button className={styles.iconButton}>
-                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" className={styles.icon}>
-                  <path d="M12 22C17.5228 22 22 17.5228 22 12C22 6.47715 17.5228 2 12 2C6.47715 2 2 6.47715 2 12C2 17.5228 6.47715 22 12 22Z" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
-                  <path d="M2 12H22" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
-                  <path d="M12 2C14.5013 4.73835 15.9228 8.29203 16 12C15.9228 15.708 14.5013 19.2616 12 22" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
-                  <path d="M12 2C9.49872 4.73835 8.07725 8.29203 8 12C8.07725 15.708 9.49872 19.2616 12 22" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
-                </svg>
-              </button>
-              <button className={styles.iconButton}>
-                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" className={styles.icon}>
-                  <path d="M21.44 11.05L12.25 20.24C11.1242 21.3658 9.59718 21.9983 8.005 21.9983C6.41282 21.9983 4.88584 21.3658 3.76 20.24C2.63416 19.1142 2.00166 17.5872 2.00166 15.995C2.00166 14.4028 2.63416 12.8758 3.76 11.75L12.95 2.56C13.7006 1.80943 14.7185 1.38777 15.78 1.38777C16.8415 1.38777 17.8594 1.80943 18.61 2.56C19.3606 3.31057 19.7822 4.32855 19.7822 5.39C19.7822 6.45145 19.3606 7.46943 18.61 8.22L9.41 17.41C9.03472 17.7853 8.52577 17.9961 7.995 17.9961C7.46423 17.9961 6.95528 17.7853 6.58 17.41C6.20472 17.0347 5.99389 16.5258 5.99389 15.995C5.99389 15.4642 6.20472 14.9553 6.58 14.58L15.07 6.1" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
-                </svg>
-              </button>
-              <button className={styles.iconButton}>
-                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" className={styles.icon}>
-                  <path d="M22 2L11 13M22 2L15 22L11 13M22 2L2 9L11 13" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
-                </svg>
-              </button>
-            </div>
-          </div>
-        </div>
+        <ChatInput 
+          activeModels={sortedInterfaces.map(({ id, provider, modelName, initialStatus }) => ({
+            id, provider, modelName, status: initialStatus
+          }))}
+          onMessageSent={handleMessageSent}
+        />
 
         <div className={styles.chatGrid}>
           {sortedInterfaces.map((chat, index) => (
-            <ChatInterface 
+            <div
               key={chat.id}
-              {...chat}
-              onStatusChange={(status) => handleStatusChange(index, status)}
-              onDelete={() => handleDelete(index)}
-            />
+              className={`${styles.chatCardWrapper} ${isDragging ? styles.draggable : ''} ${dragItemRef.current === index ? styles.dragging : ''}`}
+              draggable={isDragging}
+              onMouseDown={() => handleLongPressStart(index)}
+              onMouseUp={() => {
+                handleLongPressEnd();
+                handleDragEnd();
+              }}
+              onMouseLeave={() => {
+                handleLongPressEnd();
+                handleDragEnd();
+              }}
+              onTouchStart={() => handleLongPressStart(index)}
+              onTouchEnd={() => {
+                handleLongPressEnd();
+                handleDragEnd();
+              }}
+              onDragStart={(e) => handleDragStart(e, index)}
+              onDragEnd={handleDragEnd}
+              onDragOver={handleDragOver}
+              onDrop={(e) => handleDrop(e, index)}
+            >
+              <ChatInterface
+                {...chat}
+                onStatusChange={(status) => handleStatusChange(index, status)}
+                onDelete={() => handleDelete(index)}
+                onMessagesUpdate={(messages) => handleMessagesUpdate(chat.id, messages)}
+              />
+            </div>
           ))}
           <AddModelCard onModelAdded={handleAddModel} />
         </div>

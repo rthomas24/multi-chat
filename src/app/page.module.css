@@ -257,6 +257,24 @@ a.secondary {
   }
 }
 
+.chatCardWrapper {
+  position: relative;
+  transition: transform 0.2s ease, opacity 0.2s ease;
+}
+
+.draggable {
+  cursor: grab;
+}
+
+.draggable .chatCardWrapper:hover {
+  opacity: 0.8;
+}
+
+.dragging {
+  opacity: 0.5;
+  cursor: grabbing;
+}
+
 .chatGrid {
   display: grid;
   grid-template-columns: repeat(2, 1fr);

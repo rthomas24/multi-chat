@@ -1,12 +1,13 @@
 "use client";
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import styles from './ChatInterface.module.css';
 import { ModelStatus } from '@/types/Status';
 import Modal from './Modal';
 import ApiKeyForm from './ApiKeyForm';
 
 interface ChatInterfaceProps {
+  id: string;
   modelName: string;
   provider: string;
   description: string;
@@ -17,19 +18,42 @@ interface ChatInterfaceProps {
   initialStatus?: ModelStatus;
   onStatusChange?: (status: ModelStatus) => void;
   onDelete?: () => void;
+  onMessagesUpdate?: (messages: { role: 'user' | 'assistant'; content: string }[]) => void;
 }
 
 export default function ChatInterface({ 
+  id,
   modelName, 
   provider, 
   description,
   messages = [],
   initialStatus = ModelStatus.READY,
   onStatusChange,
-  onDelete
+  onDelete,
+  onMessagesUpdate
 }: ChatInterfaceProps) {
   const [status, setStatus] = useState<ModelStatus>(initialStatus);
   const [isModalOpen, setIsModalOpen] = useState(false);
+
+  useEffect(() => {
+    const handleModelResponse = (event: CustomEvent<{ id: string; content: string; error?: string }>) => {
+      if (event.detail.id === id) {
+        if (event.detail.error) {
+          // Handle error
+          return;
+        }
+        onMessagesUpdate?.([
+          ...messages,
+          { role: 'assistant', content: event.detail.content }
+        ]);
+      }
+    };
+
+    window.addEventListener('model-response', handleModelResponse as EventListener);
+    return () => {
+      window.removeEventListener('model-response', handleModelResponse as EventListener);
+    };
+  }, [id, messages, onMessagesUpdate]);
 
   const handleStatusClick = (e: React.MouseEvent) => {
     e.stopPropagation();

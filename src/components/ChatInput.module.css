@@ -1,0 +1,40 @@
+.inputContainer {
+  width: 100%;
+  background: rgba(255, 255, 255, 0.1);
+  border-radius: 12px;
+  padding: 1rem;
+  margin-bottom: 2rem;
+}
+
+.input {
+  width: 100%;
+  background: transparent;
+  border: none;
+  color: #fff;
+  font-size: 1rem;
+  padding: 0.5rem;
+  margin-bottom: 1rem;
+}
+
+.input:focus {
+  outline: none;
+}
+
+.inputActions {
+  display: flex;
+  justify-content: flex-end;
+}
+
+.sendButton {
+  background: #00b4d8;
+  color: #fff;
+  border: none;
+  padding: 0.5rem 1.5rem;
+  border-radius: 6px;
+  cursor: pointer;
+  transition: background 0.2s;
+}
+
+.sendButton:hover {
+  background: #0098b7;
+} 
