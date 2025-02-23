@@ -1,0 +1,14 @@
+{
+  "OpenAI": {
+    "models": ["GPT-4", "GPT-3.5 Turbo"],
+    "keyPrefix": "sk-"
+  },
+  "Anthropic": {
+    "models": ["Claude 3 Opus", "Claude 3 Sonnet", "Claude 3 Haiku"],
+    "keyPrefix": "sk-ant-"
+  },
+  "Google": {
+    "models": ["Gemini Pro", "Gemini Ultra"],
+    "keyPrefix": "AIza"
+  }
+} 

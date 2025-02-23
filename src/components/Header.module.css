@@ -1,0 +1,40 @@
+.header {
+  width: 100%;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+  padding: 1rem;
+}
+
+.headerContent {
+  max-width: 1200px;
+  margin: 0 auto;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.logo {
+  font-weight: 600;
+  font-size: 1.25rem;
+  color: #fff;
+}
+
+.nav {
+  display: flex;
+  gap: 1rem;
+  align-items: center;
+}
+
+.navButton {
+  background: transparent;
+  border: none;
+  color: #9ca3af;
+  padding: 0.5rem;
+  cursor: pointer;
+  border-radius: 6px;
+  transition: all 0.2s;
+}
+
+.navButton:hover {
+  color: #fff;
+  background: rgba(255, 255, 255, 0.1);
+} 

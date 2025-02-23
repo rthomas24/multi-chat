@@ -6,13 +6,11 @@
   --button-primary-hover: #383838;
   --button-secondary-hover: #f2f2f2;
 
-  display: grid;
-  grid-template-rows: 20px 1fr 20px;
-  align-items: center;
-  justify-items: center;
-  min-height: 100svh;
-  padding: 80px;
-  gap: 64px;
+  min-height: 100vh;
+  background-color: #1a1a1a;
+  color: white;
+  display: flex;
+  flex-direction: column;
   font-family: var(--font-geist-sans);
 }
 
@@ -28,10 +26,79 @@
 }
 
 .main {
+  flex: 1;
   display: flex;
   flex-direction: column;
-  gap: 32px;
-  grid-row-start: 2;
+  align-items: center;
+  justify-content: flex-start;
+  padding: 4rem 2rem;
+  max-width: 1400px;
+  margin: 0 auto;
+  width: 100%;
+}
+
+.heading {
+  font-size: 2.5rem;
+  font-weight: 500;
+  margin-bottom: 2rem;
+  text-align: center;
+}
+
+.inputContainer {
+  width: 100%;
+  background: rgba(255, 255, 255, 0.1);
+  border-radius: 12px;
+  padding: 1rem;
+}
+
+.input {
+  width: 100%;
+  background: transparent;
+  border: none;
+  color: #9ca3af;
+  font-size: 1rem;
+  padding: 0.5rem;
+  margin-bottom: 1rem;
+}
+
+.input:focus {
+  outline: none;
+}
+
+.inputActions {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.deepResearchBtn {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  background: transparent;
+  border: 1px solid #00b4d8;
+  color: #00b4d8;
+  padding: 0.5rem 1rem;
+  border-radius: 6px;
+  cursor: pointer;
+}
+
+.inputButtons {
+  display: flex;
+  gap: 0.5rem;
+}
+
+.iconButton {
+  background: transparent;
+  border: none;
+  padding: 0.5rem;
+  cursor: pointer;
+  opacity: 0.7;
+  transition: opacity 0.2s;
+}
+
+.iconButton:hover {
+  opacity: 1;
 }
 
 .main ol {
@@ -93,19 +160,38 @@ a.secondary {
 }
 
 .footer {
-  grid-row-start: 3;
   display: flex;
   gap: 24px;
+  padding: 1rem;
+  border-top: 1px solid rgba(255, 255, 255, 0.1);
+  justify-content: center;
 }
 
-.footer a {
+.footerLink {
   display: flex;
   align-items: center;
   gap: 8px;
+  color: #9ca3af;
+  text-decoration: none;
+  font-size: 0.9rem;
+  transition: color 0.2s;
 }
 
-.footer img {
-  flex-shrink: 0;
+.footerLink:hover {
+  color: #fff;
+}
+
+.footerIcon {
+  opacity: 0.7;
+}
+
+.footerLink:hover .footerIcon {
+  opacity: 1;
+}
+
+/* Add this for the main content icons */
+.icon {
+  stroke: currentColor;
 }
 
 /* Enable hover only on non-touch devices */
@@ -133,7 +219,11 @@ a.secondary {
   }
 
   .main {
-    align-items: center;
+    padding: 2rem 1rem;
+  }
+
+  .heading {
+    font-size: 2rem;
   }
 
   .main ol {
@@ -164,5 +254,29 @@ a.secondary {
 @media (prefers-color-scheme: dark) {
   .logo {
     filter: invert();
+  }
+}
+
+.chatGrid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 2rem;
+  width: 100%;
+  margin-top: 3rem;
+  padding: 0 2rem;
+  max-width: 1400px;
+}
+
+@media (max-width: 1200px) {
+  .chatGrid {
+    grid-template-columns: 1fr;
+    max-width: 800px;
+  }
+}
+
+@media (max-width: 640px) {
+  .chatGrid {
+    padding: 0 1rem;
+    gap: 1.5rem;
   }
 }

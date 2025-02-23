@@ -1,0 +1,234 @@
+.container {
+  background: rgba(255, 255, 255, 0.05);
+  border-radius: 12px;
+  padding: 0;
+  transition: all 0.3s ease;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  height: 400px;
+  display: flex;
+  flex-direction: column;
+  position: relative;
+}
+
+.container:hover {
+  transform: translateY(-2px);
+  background: rgba(255, 255, 255, 0.07);
+}
+
+/* Status-specific container styles */
+.active {
+  border-color: #00b4d8;
+  background: rgba(0, 180, 216, 0.05);
+}
+
+.inactive {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.inactive:hover {
+  transform: none;
+  background: rgba(255, 255, 255, 0.05);
+}
+
+/* Status indicator styles */
+.status {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  font-size: 0.875rem;
+  padding: 0.25rem 0.75rem;
+  border-radius: 1rem;
+  background: rgba(255, 255, 255, 0.1);
+}
+
+.statusDot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  transition: background-color 0.3s ease;
+}
+
+.status_active .statusDot {
+  background: #00b4d8;
+}
+
+.status_ready .statusDot {
+  background: #10b981;
+}
+
+.status_inactive .statusDot {
+  background: #6b7280;
+}
+
+.header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  padding: 3.5rem 1.5rem 1rem 1.5rem;
+}
+
+.modelInfo {
+  flex: 1;
+}
+
+.modelName {
+  font-size: 1.5rem;
+  font-weight: 600;
+  margin: 0;
+  color: #fff;
+}
+
+.provider {
+  font-size: 1rem;
+  color: #9ca3af;
+  display: block;
+  margin-top: 0.25rem;
+}
+
+.description {
+  padding: 0 1.5rem;
+  color: #9ca3af;
+  font-size: 1rem;
+  margin: 0 0 1.5rem 0;
+  line-height: 1.5;
+}
+
+.messages {
+  flex: 1;
+  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+  padding: 0 1.5rem 1.5rem 1.5rem;
+}
+
+.message {
+  display: flex;
+  gap: 0.75rem;
+  padding: 0.75rem;
+  border-radius: 8px;
+  background: rgba(255, 255, 255, 0.03);
+}
+
+.user {
+  background: rgba(255, 255, 255, 0.05);
+}
+
+.assistant {
+  background: rgba(0, 180, 216, 0.1);
+}
+
+.messageContent {
+  font-size: 1rem;
+  line-height: 1.5;
+  color: #e5e7eb;
+}
+
+/* Update inactive styles */
+.inactive .modelInfo {
+  cursor: not-allowed;
+}
+
+.inactive .modelInfo:hover {
+  background: transparent;
+}
+
+/* Update status button styles */
+.statusButton {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  font-size: 0.875rem;
+  padding: 0.25rem 0.75rem;
+  border-radius: 1rem;
+  background: rgba(255, 255, 255, 0.1);
+  border: none;
+  color: #9ca3af;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.statusButton:hover:not(:disabled) {
+  background: rgba(255, 255, 255, 0.15);
+}
+
+.statusButton:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+/* Status-specific button styles */
+.status_active.statusButton {
+  background: rgba(0, 180, 216, 0.2);
+  color: #00b4d8;
+}
+
+.status_ready.statusButton {
+  background: rgba(16, 185, 129, 0.2);
+  color: #10b981;
+}
+
+.status_inactive.statusButton {
+  background: rgba(107, 114, 128, 0.2);
+  color: #6b7280;
+}
+
+/* Remove old hover styles */
+.modelInfo:hover {
+  background: transparent;
+}
+
+.inactive .modelInfo:hover {
+  background: transparent;
+}
+
+.actions {
+  display: flex;
+  gap: 0.75rem;
+  align-items: center;
+}
+
+.apiKeyButton {
+  background: transparent;
+  border: 1px solid #00b4d8;
+  color: #00b4d8;
+  padding: 0.25rem 0.75rem;
+  border-radius: 1rem;
+  font-size: 0.875rem;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.apiKeyButton:hover {
+  background: rgba(0, 180, 216, 0.1);
+}
+
+.deleteButton {
+  position: absolute;
+  top: 0;
+  left: 0;
+  background: transparent;
+  border: none;
+  color: #6b7280;
+  padding: 1rem;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.2s ease;
+  border-radius: 12px 0 12px 0;
+  background: rgba(239, 68, 68, 0.1);
+}
+
+.deleteButton:hover {
+  color: #ef4444;
+  background: rgba(239, 68, 68, 0.15);
+}
+
+/* Add styles for the content area */
+.content {
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+} 
