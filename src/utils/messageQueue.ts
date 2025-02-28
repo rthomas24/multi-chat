@@ -1,5 +1,4 @@
 import { callModel } from './modelProviders';
-import { ModelStatus } from '@/types/Status';
 
 interface QueueItem {
   id: string;

@@ -1,14 +1,22 @@
 {
   "OpenAI": {
-    "models": ["GPT-4", "GPT-3.5 Turbo"],
-    "keyPrefix": "sk-"
+    "models": ["gpt-4o", "GPT-3.5 Turbo"],
+    "keyPrefix": "sk-",
+    "logo": "/openai.png"
   },
   "Anthropic": {
-    "models": ["Claude 3 Opus", "Claude 3 Sonnet", "Claude 3 Haiku"],
-    "keyPrefix": "sk-ant-"
+    "models": ["Claude 3 Opus", "claude-3-5-sonnet-20240620", "Claude 3 Haiku"],
+    "keyPrefix": "sk-ant-",
+    "logo": "/claude-logo.png"
   },
   "Google": {
     "models": ["Gemini Pro", "Gemini Ultra"],
-    "keyPrefix": "AIza"
+    "keyPrefix": "AIza",
+    "logo": "/google.png"
+  },
+  "xAI": {
+    "models": ["Grok-1"],
+    "keyPrefix": "xai-",
+    "logo": "/xai.png"
   }
 } 

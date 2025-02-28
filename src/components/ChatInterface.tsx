@@ -19,6 +19,8 @@ interface ChatInterfaceProps {
   onStatusChange?: (status: ModelStatus) => void;
   onDelete?: () => void;
   onMessagesUpdate?: (messages: { role: 'user' | 'assistant'; content: string }[]) => void;
+  onModelChange?: (modelName: string) => void;
+  providersData: any;
 }
 
 export default function ChatInterface({ 
@@ -30,7 +32,9 @@ export default function ChatInterface({
   initialStatus = ModelStatus.READY,
   onStatusChange,
   onDelete,
-  onMessagesUpdate
+  onMessagesUpdate,
+  onModelChange,
+  providersData
 }: ChatInterfaceProps) {
   const [status, setStatus] = useState<ModelStatus>(initialStatus);
   const [isModalOpen, setIsModalOpen] = useState(false);
@@ -72,48 +76,45 @@ export default function ChatInterface({
   return (
     <>
       <div className={`${styles.container} ${styles[status]}`}>
-        <button 
-          className={styles.deleteButton}
-          onClick={onDelete}
-          aria-label="Remove chat"
-        >
-          <svg 
-            width="16" 
-            height="16" 
-            viewBox="0 0 24 24" 
-            fill="none" 
-            stroke="currentColor" 
-            strokeWidth="2"
-            strokeLinecap="round" 
-            strokeLinejoin="round"
-          >
-            <path d="M18 6L6 18M6 6l12 12"/>
-          </svg>
-        </button>
-
         <div className={styles.header}>
-          <div className={styles.modelInfo}>
-            <h3 className={styles.modelName}>{modelName}</h3>
-            <span className={styles.provider}>{provider}</span>
-          </div>
-          <div className={styles.actions}>
-            {status === ModelStatus.INACTIVE && (
-              <button 
-                className={styles.apiKeyButton}
-                onClick={() => setIsModalOpen(true)}
-              >
-                Add API Key
-              </button>
-            )}
-            <button 
-              className={`${styles.statusButton} ${styles[`status_${status}`]}`}
-              onClick={handleStatusClick}
-              disabled={status === ModelStatus.INACTIVE}
+          <button 
+            className={styles.deleteButton}
+            onClick={onDelete}
+            aria-label="Remove chat"
+          >
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+              <path d="M18 6L6 18M6 6l12 12"/>
+            </svg>
+          </button>
+
+          <div className={styles.modelSelector}>
+            <select 
+              value={modelName}
+              onChange={(e) => onModelChange?.(e.target.value)}
+              className={styles.modelSelect}
             >
-              <span className={styles.statusDot} />
-              {status.charAt(0).toUpperCase() + status.slice(1)}
-            </button>
+              {providersData[provider].models.map(model => (
+                <option key={model} value={model}>{model}</option>
+              ))}
+            </select>
+            <div className={styles.providerInfo}>
+              <span className={styles.provider}>{provider}</span>
+              <img 
+                src={providersData[provider].logo} 
+                alt={`${provider} logo`}
+                className={styles.providerLogo}
+              />
+            </div>
           </div>
+
+          <button 
+            className={`${styles.statusButton} ${styles[`status_${status}`]}`}
+            onClick={handleStatusClick}
+            disabled={status === ModelStatus.INACTIVE}
+          >
+            <span className={styles.statusDot} />
+            {status.charAt(0).toUpperCase() + status.slice(1)}
+          </button>
         </div>
         
         <p className={styles.description}>{description}</p>

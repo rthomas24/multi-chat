@@ -8,6 +8,7 @@ import styles from "./page.module.css";
 import { useState, useRef } from "react";
 import AddModelCard from '@/components/AddModelCard';
 import ChatInput from '@/components/ChatInput';
+import providersData from '@/data/providers.json';
 
 // Add this with the other interfaces at the top
 interface Message {
@@ -29,7 +30,7 @@ interface ChatModel {
 const chatInterfaces: ChatModel[] = [
   {
     id: 'claude-opus-1',
-    modelName: "Claude 3 Opus",
+    modelName: "claude-3-5-sonnet-20240620",
     provider: "Anthropic",
     description: "Most capable model for highly complex tasks",
     initialStatus: ModelStatus.ACTIVE,
@@ -40,7 +41,7 @@ const chatInterfaces: ChatModel[] = [
   },
   {
     id: 'gpt4-1',
-    modelName: "GPT-4",
+    modelName: "gpt-4o",
     provider: "OpenAI",
     description: "Advanced reasoning and creativity",
     initialStatus: ModelStatus.READY,
@@ -49,50 +50,61 @@ const chatInterfaces: ChatModel[] = [
       { role: 'assistant' as const, content: "I combine existing ideas in novel ways..." }
     ]
   },
-  {
-    id: 'claude-sonnet-1',
-    modelName: "Claude 3 Sonnet",
-    provider: "Anthropic",
-    description: "Balanced performance and efficiency",
-    initialStatus: ModelStatus.READY,
-    messages: [
-      { role: 'user' as const, content: "How do you maintain efficiency?" },
-      { role: 'assistant' as const, content: "I focus on essential information..." }
-    ]
-  },
-  {
-    id: 'gemini-pro-1',
-    modelName: "Gemini Pro",
-    provider: "Google",
-    description: "Multimodal understanding and generation",
-    initialStatus: ModelStatus.READY,
-    messages: [
-      { role: 'user' as const, content: "How do you process different types of input?" },
-      { role: 'assistant' as const, content: "I analyze context across modalities..." }
-    ]
-  },
-  {
-    id: 'claude-haiku-1',
-    modelName: "Claude 3 Haiku",
-    provider: "Anthropic",
-    description: "Fast, efficient responses",
-    initialStatus: ModelStatus.READY,
-    messages: [
-      { role: 'user' as const, content: "What's your approach to quick responses?" },
-      { role: 'assistant' as const, content: "I prioritize clarity and conciseness..." }
-    ]
-  },
-  {
-    id: 'gpt-3.5-turbo-1',
-    modelName: "GPT-3.5 Turbo",
-    provider: "OpenAI",
-    description: "Fast and cost-effective processing",
-    initialStatus: ModelStatus.INACTIVE,
-    messages: [
-      { role: 'user' as const, content: "How do you balance speed and quality?" },
-      { role: 'assistant' as const, content: "I optimize for practical solutions..." }
-    ]
-  }
+  // {
+  //   id: 'claude-sonnet-1',
+  //   modelName: "Claude 3 Sonnet",
+  //   provider: "Anthropic",
+  //   description: "Balanced performance and efficiency",
+  //   initialStatus: ModelStatus.READY,
+  //   messages: [
+  //     { role: 'user' as const, content: "How do you maintain efficiency?" },
+  //     { role: 'assistant' as const, content: "I focus on essential information..." }
+  //   ]
+  // },
+  // {
+  //   id: 'gemini-pro-1',
+  //   modelName: "Gemini Pro",
+  //   provider: "Google",
+  //   description: "Multimodal understanding and generation",
+  //   initialStatus: ModelStatus.READY,
+  //   messages: [
+  //     { role: 'user' as const, content: "How do you process different types of input?" },
+  //     { role: 'assistant' as const, content: "I analyze context across modalities..." }
+  //   ]
+  // },
+  // {
+  //   id: 'claude-haiku-1',
+  //   modelName: "Claude 3 Haiku",
+  //   provider: "Anthropic",
+  //   description: "Fast, efficient responses",
+  //   initialStatus: ModelStatus.READY,
+  //   messages: [
+  //     { role: 'user' as const, content: "What's your approach to quick responses?" },
+  //     { role: 'assistant' as const, content: "I prioritize clarity and conciseness..." }
+  //   ]
+  // },
+  // {
+  //   id: 'gpt-3.5-turbo-1',
+  //   modelName: "GPT-3.5 Turbo",
+  //   provider: "OpenAI",
+  //   description: "Fast and cost-effective processing",
+  //   initialStatus: ModelStatus.INACTIVE,
+  //   messages: [
+  //     { role: 'user' as const, content: "How do you balance speed and quality?" },
+  //     { role: 'assistant' as const, content: "I optimize for practical solutions..." }
+  //   ]
+  // },
+  // {
+  //   id: 'grok-1',
+  //   modelName: "Grok-1",
+  //   provider: "xAI",
+  //   description: "Real-time knowledge and witty responses",
+  //   initialStatus: ModelStatus.READY,
+  //   messages: [
+  //     { role: 'user' as const, content: "What makes you unique?" },
+  //     { role: 'assistant' as const, content: "I combine real-time knowledge with a dash of wit..." }
+  //   ]
+  // }
 ];
 
 // Add a helper function to sort chat interfaces by status
@@ -260,9 +272,14 @@ export default function Home() {
             >
               <ChatInterface
                 {...chat}
+                providersData={providersData}
                 onStatusChange={(status) => handleStatusChange(index, status)}
                 onDelete={() => handleDelete(index)}
                 onMessagesUpdate={(messages) => handleMessagesUpdate(chat.id, messages)}
+                onModelChange={(modelName) => {
+                  // Add handler for model change if needed
+                  console.log('Model changed to:', modelName);
+                }}
               />
             </div>
           ))}

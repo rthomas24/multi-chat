@@ -63,35 +63,98 @@
 
 .header {
   display: flex;
-  justify-content: space-between;
-  align-items: flex-start;
-  padding: 3.5rem 1.5rem 1rem 1.5rem;
+  align-items: center;
+  gap: 1rem;
+  padding: 0.75rem;
+  background: rgba(255, 255, 255, 0.05);
+  border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+  height: 3.5rem;
 }
 
-.modelInfo {
+.deleteButton {
+  background: transparent;
+  border: none;
+  color: #6b7280;
+  padding: 0.5rem;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.2s ease;
+  border-radius: 6px;
+}
+
+.deleteButton:hover {
+  color: #ef4444;
+  background: rgba(239, 68, 68, 0.1);
+}
+
+.modelSelector {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
   flex: 1;
 }
 
-.modelName {
-  font-size: 1.5rem;
-  font-weight: 600;
-  margin: 0;
+.modelSelect {
+  background: transparent;
+  border: none;
   color: #fff;
+  font-size: 1rem;
+  font-weight: 500;
+  cursor: pointer;
+  padding: 0.25rem 0.5rem;
+  border-radius: 4px;
+  transition: all 0.2s ease;
 }
 
+.modelSelect:hover {
+  background: rgba(255, 255, 255, 0.05);
+}
+
+.providerInfo {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.providerLogo {
+  width: 24px;
+  height: 24px;
+  opacity: 0.8;
+}
+
+/* Update existing provider style */
 .provider {
-  font-size: 1rem;
   color: #9ca3af;
-  display: block;
-  margin-top: 0.25rem;
+  font-size: 0.875rem;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.statusButton {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  font-size: 0.75rem;
+  padding: 0.25rem 0.75rem;
+  border-radius: 1rem;
+  background: rgba(255, 255, 255, 0.1);
+  border: none;
+  color: #9ca3af;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  height: 1.75rem;
+}
+
+/* Remove the old header styles */
+.modelInfo {
+  display: none;
 }
 
 .description {
-  padding: 0 1.5rem;
-  color: #9ca3af;
-  font-size: 1rem;
-  margin: 0 0 1.5rem 0;
-  line-height: 1.5;
+  display: none;
 }
 
 .messages {
@@ -100,7 +163,7 @@
   display: flex;
   flex-direction: column;
   gap: 0.75rem;
-  padding: 0 1.5rem 1.5rem 1.5rem;
+  padding: 1rem 1.5rem 1.5rem 1.5rem;
 }
 
 .message {
@@ -135,20 +198,6 @@
 }
 
 /* Update status button styles */
-.statusButton {
-  display: flex;
-  align-items: center;
-  gap: 0.5rem;
-  font-size: 0.875rem;
-  padding: 0.25rem 0.75rem;
-  border-radius: 1rem;
-  background: rgba(255, 255, 255, 0.1);
-  border: none;
-  color: #9ca3af;
-  cursor: pointer;
-  transition: all 0.2s ease;
-}
-
 .statusButton:hover:not(:disabled) {
   background: rgba(255, 255, 255, 0.15);
 }
@@ -202,28 +251,6 @@
 
 .apiKeyButton:hover {
   background: rgba(0, 180, 216, 0.1);
-}
-
-.deleteButton {
-  position: absolute;
-  top: 0;
-  left: 0;
-  background: transparent;
-  border: none;
-  color: #6b7280;
-  padding: 1rem;
-  cursor: pointer;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  transition: all 0.2s ease;
-  border-radius: 12px 0 12px 0;
-  background: rgba(239, 68, 68, 0.1);
-}
-
-.deleteButton:hover {
-  color: #ef4444;
-  background: rgba(239, 68, 68, 0.15);
 }
 
 /* Add styles for the content area */
