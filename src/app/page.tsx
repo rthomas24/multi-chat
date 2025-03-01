@@ -14,6 +14,7 @@ import providersData from '@/data/providers.json';
 interface Message {
   role: 'user' | 'assistant';
   content: string;
+  webSearch?: boolean;
 }
 
 // Add this type at the top of the file
@@ -212,13 +213,13 @@ export default function Home() {
     }
   };
 
-  const handleMessageSent = (message: string) => {
+  const handleMessageSent = (message: string, webSearch?: boolean) => {
     // Add message to all active interfaces
     setSortedInterfaces(prev => 
       prev.map(chat => ({
         ...chat,
         messages: chat.initialStatus === ModelStatus.ACTIVE ? 
-          [...chat.messages, { role: 'user', content: message }] : 
+          [...chat.messages, { role: 'user', content: message, webSearch }] : 
           chat.messages
       }))
     );
@@ -236,7 +237,7 @@ export default function Home() {
     <div className={styles.page}>
       <Header />
       <main className={styles.main}>
-        <h1 className={styles.heading}>What do you want to know?</h1>
+        <h1 className={styles.heading}>One question, multiple perspectives</h1>
         
         <ChatInput 
           activeModels={sortedInterfaces.map(({ id, provider, modelName, initialStatus }) => ({

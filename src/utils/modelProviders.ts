@@ -6,6 +6,7 @@ interface ModelResponse {
 interface ModelRequest {
   prompt: string;
   model: string;
+  webSearch?: boolean;
 }
 
 // Helper to get API key
@@ -98,7 +99,8 @@ export const callModel = async (provider: string, request: ModelRequest): Promis
       body: JSON.stringify({
         prompt: request.prompt,
         model: request.model,
-        provider: provider
+        provider: provider,
+        webSearch: request.webSearch || false
       })
     });
     

@@ -16,11 +16,12 @@ interface ChatInterfaceProps {
   messages?: {
     role: 'user' | 'assistant';
     content: string;
+    webSearch?: boolean;
   }[];
   initialStatus?: ModelStatus;
   onStatusChange?: (status: ModelStatus) => void;
   onDelete?: () => void;
-  onMessagesUpdate?: (messages: { role: 'user' | 'assistant'; content: string }[]) => void;
+  onMessagesUpdate?: (messages: { role: 'user' | 'assistant'; content: string; webSearch?: boolean }[]) => void;
   onModelChange?: (modelName: string) => void;
   providersData: any;
 }
@@ -131,9 +132,10 @@ export default function ChatInterface({
 }: ChatInterfaceProps) {
   const [status, setStatus] = useState<ModelStatus>(initialStatus);
   const [isModalOpen, setIsModalOpen] = useState(false);
+  const [copiedMessageIndex, setCopiedMessageIndex] = useState<number | null>(null);
 
   useEffect(() => {
-    const handleModelResponse = (event: CustomEvent<{ id: string; content: string; error?: string }>) => {
+    const handleModelResponse = (event: CustomEvent<{ id: string; content: string; error?: string; webSearch?: boolean }>) => {
       if (event.detail.id === id) {
         if (event.detail.error) {
           // Handle error
@@ -141,7 +143,11 @@ export default function ChatInterface({
         }
         onMessagesUpdate?.([
           ...messages,
-          { role: 'assistant', content: event.detail.content }
+          { 
+            role: 'assistant', 
+            content: event.detail.content,
+            webSearch: event.detail.webSearch 
+          }
         ]);
       }
     };
@@ -164,6 +170,16 @@ export default function ChatInterface({
   const handleApiKeySave = () => {
     setIsModalOpen(false);
     // You might want to trigger a refresh or status update here
+  };
+
+  const handleCopyMessage = (content: string, index: number) => {
+    navigator.clipboard.writeText(content);
+    setCopiedMessageIndex(index);
+    
+    // Reset the copied state after 2 seconds
+    setTimeout(() => {
+      setCopiedMessageIndex(null);
+    }, 2000);
   };
 
   return (
@@ -220,6 +236,31 @@ export default function ChatInterface({
             >
               <div className={styles.messageContent}>
                 {formatMessageContent(message.content)}
+                <div className={styles.messageFooter}>
+                  {message.webSearch && (
+                    <div className={styles.webSearchIndicator} title="Web search was used">
+                      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                        <circle cx="12" cy="12" r="10"></circle>
+                        <line x1="2" y1="12" x2="22" y2="12"></line>
+                        <path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"></path>
+                      </svg>
+                    </div>
+                  )}
+                  <button 
+                    className={styles.messageAction}
+                    onClick={() => handleCopyMessage(message.content, index)}
+                    title="Copy message"
+                  >
+                    {copiedMessageIndex === index ? (
+                      <span className={styles.copiedText}>Copied!</span>
+                    ) : (
+                      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                        <rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect>
+                        <path d="M5 15H4a2 2 0 01-2-2V4a2 2 0 012-2h9a2 2 0 012 2v1"></path>
+                      </svg>
+                    )}
+                  </button>
+                </div>
               </div>
             </div>
           ))}

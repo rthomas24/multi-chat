@@ -4,9 +4,9 @@
   padding: 0;
   transition: all 0.3s ease;
   border: 1px solid rgba(255, 255, 255, 0.1);
-  height: 400px;
-  min-height: 400px;
-  max-height: 600px;
+  height: 500px;
+  min-height: 500px;
+  max-height: 700px;
   width: 100%;
   max-width: 100%;
   display: flex;
@@ -198,6 +198,7 @@
   color: #e5e7eb;
   width: 100%;
   overflow-wrap: break-word;
+  position: relative;
 }
 
 /* Update inactive styles */
@@ -368,4 +369,61 @@
 
 .textParagraph:last-child {
   margin-bottom: 0;
+}
+
+/* Add styles for the message footer */
+.messageFooter {
+  display: flex;
+  justify-content: flex-end;
+  align-items: center;
+  gap: 0.5rem;
+  margin-top: 0.75rem;
+  padding-top: 0.5rem;
+  border-top: 1px solid rgba(255, 255, 255, 0.05);
+  opacity: 0.5;
+  transition: opacity 0.2s ease;
+}
+
+.message:hover .messageFooter {
+  opacity: 1;
+}
+
+.messageAction {
+  background: transparent;
+  border: none;
+  color: #9ca3af;
+  cursor: pointer;
+  padding: 4px;
+  border-radius: 4px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.2s ease;
+}
+
+.messageAction:hover {
+  color: #e6e6e6;
+  background: rgba(255, 255, 255, 0.1);
+}
+
+.copiedText {
+  font-size: 0.75rem;
+  color: #10b981;
+}
+
+/* Web search indicator styles */
+.webSearchIndicator {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #00b4d8;
+  margin-right: auto;
+  font-size: 0.75rem;
+  padding: 4px;
+  border-radius: 4px;
+  transition: all 0.2s ease;
+}
+
+.webSearchIndicator svg {
+  margin-right: 4px;
 } 

@@ -5,6 +5,7 @@ interface QueueItem {
   provider: string;
   modelName: string;
   prompt: string;
+  webSearch?: boolean;
 }
 
 class MessageQueue {
@@ -25,18 +26,19 @@ class MessageQueue {
     }
 
     this.isProcessing = true;
-    const promises = this.queue.map(async (item) => {
+    const promises = this.queue.map(async (item) => {    
       const response = await callModel(item.provider, {
         prompt: item.prompt,
-        model: item.modelName
+        model: item.modelName,
+        webSearch: item.webSearch
       });
       
-      // Dispatch event with response
       const event = new CustomEvent('model-response', {
         detail: {
           id: item.id,
           content: response.content,
-          error: response.error
+          error: response.error,
+          webSearch: item.webSearch
         }
       });
       window.dispatchEvent(event);
