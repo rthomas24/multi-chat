@@ -3,6 +3,10 @@
   border-radius: 12px;
   border: 2px dashed rgba(255, 255, 255, 0.1);
   height: 400px;
+  min-height: 400px;
+  max-height: 600px;
+  width: 100%;
+  max-width: 100%;
   display: flex;
   align-items: center;
   justify-content: center;

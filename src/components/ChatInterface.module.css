@@ -5,9 +5,14 @@
   transition: all 0.3s ease;
   border: 1px solid rgba(255, 255, 255, 0.1);
   height: 400px;
+  min-height: 400px;
+  max-height: 600px;
+  width: 100%;
+  max-width: 100%;
   display: flex;
   flex-direction: column;
   position: relative;
+  overflow: hidden;
 }
 
 .container:hover {
@@ -164,6 +169,8 @@
   flex-direction: column;
   gap: 0.75rem;
   padding: 1rem 1.5rem 1.5rem 1.5rem;
+  max-height: calc(100% - 3.5rem);
+  width: 100%;
 }
 
 .message {
@@ -172,6 +179,9 @@
   padding: 0.75rem;
   border-radius: 8px;
   background: rgba(255, 255, 255, 0.03);
+  width: 100%;
+  max-width: 100%;
+  word-break: break-word;
 }
 
 .user {
@@ -186,6 +196,8 @@
   font-size: 1rem;
   line-height: 1.5;
   color: #e5e7eb;
+  width: 100%;
+  overflow-wrap: break-word;
 }
 
 /* Update inactive styles */
@@ -258,4 +270,102 @@
   display: flex;
   flex-direction: column;
   flex: 1;
+}
+
+/* Add these new styles for code formatting */
+.codeBlockContainer {
+  margin: 1rem 0;
+  border-radius: 6px;
+  overflow: hidden;
+  background: #1e1e1e; /* VS Code-like dark background */
+  width: 100%;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
+}
+
+.codeLanguage {
+  background-color: #252526; /* Slightly lighter than the code block */
+  padding: 0.3rem 1rem;
+  font-family: var(--font-mono, monospace);
+  font-size: 0.8rem;
+  color: #e6e6e6;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.copyButton {
+  background: transparent;
+  border: none;
+  color: #6b7280;
+  cursor: pointer;
+  padding: 4px;
+  border-radius: 4px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.2s ease;
+}
+
+.copyButton:hover {
+  color: #e6e6e6;
+  background: rgba(255, 255, 255, 0.1);
+}
+
+.codeBlock {
+  padding: 1rem;
+  margin: 0;
+  overflow-x: auto;
+  font-family: 'Menlo', 'Monaco', 'Courier New', monospace;
+  font-size: 0.875rem;
+  line-height: 1.5;
+  width: 100%;
+  max-width: 100%;
+  color: #d4d4d4; /* Base text color */
+}
+
+/* Remove the old syntax highlighting styles since we're using highlight.js */
+.codeBlock .keyword,
+.codeBlock .string,
+.codeBlock .comment,
+.codeBlock .function,
+.codeBlock .number,
+.codeBlock .operator,
+.codeBlock .variable,
+.codeBlock .property,
+.codeBlock .type,
+.codeBlock .class,
+.codeBlock .tag {
+  /* These are no longer needed as highlight.js will handle syntax highlighting */
+}
+
+/* Add styles to ensure highlight.js styles work well with our UI */
+.codeBlock code {
+  font-family: inherit;
+  padding: 0;
+  background: transparent;
+}
+
+/* Ensure the code block container has proper styling */
+.codeBlockContainer {
+  margin: 1rem 0;
+  border-radius: 6px;
+  overflow: hidden;
+  background: #1e1e1e; /* VS Code-like dark background */
+  width: 100%;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
+}
+
+.textParagraph {
+  margin: 0.5rem 0;
+  line-height: 1.5;
+}
+
+/* Ensure the first paragraph has no top margin and last has no bottom margin */
+.textParagraph:first-child {
+  margin-top: 0;
+}
+
+.textParagraph:last-child {
+  margin-bottom: 0;
 } 

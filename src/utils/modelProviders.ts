@@ -63,6 +63,22 @@ export const callGoogle = async ({ prompt, model }: ModelRequest): Promise<Model
   }
 };
 
+// xAI API handler
+export const callXAI = async ({ prompt, model }: ModelRequest): Promise<ModelResponse> => {
+  const apiKey = getApiKey('xai');
+  if (!apiKey) return { content: '', error: 'No API key found' };
+
+  console.log('xAI API Key:', apiKey);
+  try {
+    const response = await callModel('xAI', { prompt, model });
+    console.log('xAI Response:', response);
+    return response;
+  } catch (error) {
+    console.error('xAI Error:', error);
+    return { content: '', error: 'Failed to call xAI API' };
+  }
+};
+
 // Main function to route to correct provider
 export const callModel = async (provider: string, request: ModelRequest): Promise<ModelResponse> => {
   if (!API_URL) {

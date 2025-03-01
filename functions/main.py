@@ -7,6 +7,8 @@ from langchain_anthropic import ChatAnthropic
 from langchain_core.messages import SystemMessage, HumanMessage
 from typing import Dict, Any, Optional
 import json
+# Add import for ChatXAI
+from langchain_xai import ChatXAI
 
 # Initialize Firebase Admin
 initialize_app()
@@ -53,12 +55,16 @@ def get_chat_model(provider: str, model_name: str, api_key: str) -> Optional[Any
         #         max_output_tokens=1024,
         #         api_key=api_key
         #     )
-        # elif provider == "xAI":
-        #     # Placeholder - xAI doesn't have a direct LangChain integration yet
-        #     return ChatOllama(
-        #         model=model_name,
-        #         temperature=0
-        #     )
+        elif provider == "xAI":
+            # xAI integration using langchain-xai
+            return ChatXAI(
+                model=model_name,
+                temperature=0,
+                max_tokens=1024,
+                api_key=api_key,
+                timeout=None,
+                max_retries=2
+            )
         else:
             logging.error(f"Unsupported provider: {provider}")
             return None
@@ -122,9 +128,9 @@ def invoke_chat_models(req: https_fn.Request) -> https_fn.Response:
                     status=400
                 )
                 
-            # Create messages list
+            # Create messages list with improved system message for code formatting
             messages = [
-                SystemMessage(content="You are a helpful AI assistant."),
+                SystemMessage(content="You are a helpful AI assistant. When providing code examples, always format them using triple backticks with the language specified. For example: ```python\nprint('Hello World')\n```. Use proper spacing between paragraphs and ensure code blocks are clearly separated from regular text."),
                 HumanMessage(content=prompt)
             ]
             

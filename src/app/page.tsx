@@ -94,17 +94,17 @@ const chatInterfaces: ChatModel[] = [
   //     { role: 'assistant' as const, content: "I optimize for practical solutions..." }
   //   ]
   // },
-  // {
-  //   id: 'grok-1',
-  //   modelName: "Grok-1",
-  //   provider: "xAI",
-  //   description: "Real-time knowledge and witty responses",
-  //   initialStatus: ModelStatus.READY,
-  //   messages: [
-  //     { role: 'user' as const, content: "What makes you unique?" },
-  //     { role: 'assistant' as const, content: "I combine real-time knowledge with a dash of wit..." }
-  //   ]
-  // }
+  {
+    id: 'grok-1',
+    modelName: "grok-2-1212",
+    provider: "xAI",
+    description: "Real-time knowledge and witty responses",
+    initialStatus: ModelStatus.READY,
+    messages: [
+      { role: 'user' as const, content: "What makes you unique?" },
+      { role: 'assistant' as const, content: "I combine real-time knowledge with a dash of wit..." }
+    ]
+  }
 ];
 
 // Add a helper function to sort chat interfaces by status

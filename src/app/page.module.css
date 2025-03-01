@@ -260,6 +260,8 @@ a.secondary {
 .chatCardWrapper {
   position: relative;
   transition: transform 0.2s ease, opacity 0.2s ease;
+  width: 100%;
+  max-width: 100%;
 }
 
 .draggable {
@@ -277,7 +279,7 @@ a.secondary {
 
 .chatGrid {
   display: grid;
-  grid-template-columns: repeat(2, 1fr);
+  grid-template-columns: repeat(auto-fill, minmax(450px, 1fr));
   gap: 2rem;
   width: 100%;
   margin-top: 3rem;
@@ -287,13 +289,14 @@ a.secondary {
 
 @media (max-width: 1200px) {
   .chatGrid {
-    grid-template-columns: 1fr;
-    max-width: 800px;
+    grid-template-columns: repeat(auto-fill, minmax(400px, 1fr));
+    max-width: 1200px;
   }
 }
 
 @media (max-width: 640px) {
   .chatGrid {
+    grid-template-columns: 1fr;
     padding: 0 1rem;
     gap: 1.5rem;
   }
