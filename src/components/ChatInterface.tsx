@@ -93,7 +93,7 @@ export default function ChatInterface({
               onChange={(e) => onModelChange?.(e.target.value)}
               className={styles.modelSelect}
             >
-              {providersData[provider].models.map(model => (
+              {providersData[provider].models.map((model: string) => (
                 <option key={model} value={model}>{model}</option>
               ))}
             </select>

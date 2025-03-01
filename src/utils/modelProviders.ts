@@ -13,12 +13,7 @@ const getApiKey = (provider: string): string | null => {
   return localStorage.getItem(`${provider.toLowerCase()}_api_key`);
 };
 
-const API_URLS = {
-  'OpenAI': process.env.NEXT_PUBLIC_OPENAI_API_URL,
-  'Anthropic': process.env.NEXT_PUBLIC_ANTHROPIC_API_URL,
-  'Google': process.env.NEXT_PUBLIC_GOOGLE_API_URL,
-  'xAI': process.env.NEXT_PUBLIC_XAI_API_URL
-} as const;
+const API_URL = process.env.NEXT_PUBLIC_API_URL;
 
 // OpenAI API handler
 export const callOpenAI = async ({ prompt, model }: ModelRequest): Promise<ModelResponse> => {
@@ -41,11 +36,13 @@ export const callAnthropic = async ({ prompt, model }: ModelRequest): Promise<Mo
   const apiKey = getApiKey('anthropic');
   if (!apiKey) return { content: '', error: 'No API key found' };
 
+  console.log('Anthropic API Key:', apiKey);
   try {
-    // Placeholder for Anthropic API call
-    // TODO: Implement actual API call
-    return { content: 'Anthropic response placeholder' };
+    const response = await callModel('Anthropic', { prompt, model });
+    console.log('Anthropic Response:', response);
+    return response;
   } catch (error) {
+    console.error('Anthropic Error:', error);
     return { content: '', error: 'Failed to call Anthropic API' };
   }
 };
@@ -55,27 +52,28 @@ export const callGoogle = async ({ prompt, model }: ModelRequest): Promise<Model
   const apiKey = getApiKey('google');
   if (!apiKey) return { content: '', error: 'No API key found' };
 
+  console.log('Google API Key:', apiKey);
   try {
-    // Placeholder for Google API call
-    // TODO: Implement actual API call
-    return { content: 'Google response placeholder' };
+    const response = await callModel('Google', { prompt, model });
+    console.log('Google Response:', response);
+    return response;
   } catch (error) {
+    console.error('Google Error:', error);
     return { content: '', error: 'Failed to call Google API' };
   }
 };
 
 // Main function to route to correct provider
 export const callModel = async (provider: string, request: ModelRequest): Promise<ModelResponse> => {
-  const apiUrl = API_URLS[provider as keyof typeof API_URLS];
-  const apiKey = localStorage.getItem(`${provider.toLowerCase()}_api_key`);
-  
-  if (!apiUrl) {
-    return { content: '', error: 'Unsupported provider' };
+  if (!API_URL) {
+    return { content: '', error: 'API URL not configured' };
   }
 
-  console.log(apiKey)
+  const apiKey = localStorage.getItem(`${provider.toLowerCase()}_api_key`);
+  
+  console.log(`Calling ${provider} with API key:`, apiKey ? 'Key exists' : 'No key found');
   try {
-    const response = await fetch(apiUrl, {
+    const response = await fetch(API_URL, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
@@ -83,16 +81,19 @@ export const callModel = async (provider: string, request: ModelRequest): Promis
       },
       body: JSON.stringify({
         prompt: request.prompt,
-        model: request.model  // Make sure we're passing the model name
+        model: request.model,
+        provider: provider
       })
     });
     
     if (!response.ok) {
-      throw new Error(`HTTP error! status: ${response.status}`);
+      const errorText = await response.text();
+      throw new Error(`HTTP error! status: ${response.status}, message: ${errorText}`);
     }
     
     return await response.json();
   } catch (error) {
+    console.error(`${provider} API Error:`, error);
     return { 
       content: '', 
       error: `Failed to call ${provider} API: ${error instanceof Error ? error.message : 'Unknown error'}`
