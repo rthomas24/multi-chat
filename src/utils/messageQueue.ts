@@ -26,22 +26,102 @@ class MessageQueue {
     }
 
     this.isProcessing = true;
-    const promises = this.queue.map(async (item) => {    
-      const response = await callModel(item.provider, {
-        prompt: item.prompt,
-        model: item.modelName,
-        webSearch: item.webSearch
-      });
+    const promises = this.queue.map(async (item) => {
+      // Start streaming for this item
+      window.dispatchEvent(
+        new CustomEvent('stream-start', { detail: { id: item.id } })
+      );
       
-      const event = new CustomEvent('model-response', {
-        detail: {
-          id: item.id,
-          content: response.content,
-          error: response.error,
-          webSearch: item.webSearch
+      try {
+        const response = callModel(item.provider, item.modelName, item.prompt);
+        
+        if (response.error) {
+          console.error(`Error from ${item.provider}:`, response.error);
+          window.dispatchEvent(
+            new CustomEvent('stream-end', {
+              detail: {
+                id: item.id,
+                webSearch: item.webSearch
+              }
+            })
+          );
+          return;
         }
-      });
-      window.dispatchEvent(event);
+        
+        if (response.stream) {
+          // Process the stream
+          try {
+            const reader = response.stream.getReader();
+            
+            while (true) {
+              const { done, value } = await reader.read();
+              
+              if (done) {
+                break;
+              }
+              
+              // Dispatch chunk event
+              window.dispatchEvent(
+                new CustomEvent('stream-chunk', {
+                  detail: {
+                    id: item.id,
+                    chunk: value
+                  }
+                })
+              );
+            }
+            
+            // Dispatch stream end event
+            window.dispatchEvent(
+              new CustomEvent('stream-end', {
+                detail: {
+                  id: item.id,
+                  webSearch: item.webSearch
+                }
+              })
+            );
+          } catch (error) {
+            console.error('Error processing stream:', error);
+            window.dispatchEvent(
+              new CustomEvent('stream-end', {
+                detail: {
+                  id: item.id,
+                  webSearch: item.webSearch
+                }
+              })
+            );
+          }
+        } else {
+          // If no stream is available, end the stream with the content
+          window.dispatchEvent(
+            new CustomEvent('stream-chunk', {
+              detail: {
+                id: item.id,
+                chunk: response.content
+              }
+            })
+          );
+          
+          window.dispatchEvent(
+            new CustomEvent('stream-end', {
+              detail: {
+                id: item.id,
+                webSearch: item.webSearch
+              }
+            })
+          );
+        }
+      } catch (error) {
+        console.error(`Error calling ${item.provider}:`, error);
+        window.dispatchEvent(
+          new CustomEvent('stream-end', {
+            detail: {
+              id: item.id,
+              webSearch: item.webSearch
+            }
+          })
+        );
+      }
     });
 
     await Promise.all(promises);
