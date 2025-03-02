@@ -1,29 +1,27 @@
 "use client";
 
-import { useState, useEffect, useRef } from 'react';
+import { useState, useRef } from 'react';
 import styles from './ChatInterface.module.css';
 import { ModelStatus } from '@/types/Status';
 import Modal from './Modal';
 import ApiKeyForm from './ApiKeyForm';
 import hljs from 'highlight.js';
-import 'highlight.js/styles/vs2015.css'; // Import a dark theme that works well with your UI
+import 'highlight.js/styles/vs2015.css';
+import { Message } from 'ai';
 
 interface ChatInterfaceProps {
   id: string;
   modelName: string;
   provider: string;
   description: string;
-  messages?: {
-    role: 'user' | 'assistant';
-    content: string;
-    webSearch?: boolean;
-  }[];
+  messages?: Message[];
   initialStatus?: ModelStatus;
   onStatusChange?: (status: ModelStatus) => void;
   onDelete?: () => void;
-  onMessagesUpdate?: (messages: { role: 'user' | 'assistant'; content: string; webSearch?: boolean }[]) => void;
-  onModelChange?: (modelName: string) => void;
   providersData: any;
+  input?: string;
+  onInputChange?: (e: React.ChangeEvent<HTMLInputElement>) => void;
+  onSubmit?: (e: React.FormEvent) => void;
 }
 
 // Function to format message content with code blocks
@@ -126,69 +124,15 @@ export default function ChatInterface({
   initialStatus = ModelStatus.READY,
   onStatusChange,
   onDelete,
-  onMessagesUpdate,
-  onModelChange,
-  providersData
+  providersData,
+  input = '',
+  onInputChange,
+  onSubmit
 }: ChatInterfaceProps) {
   const [status, setStatus] = useState<ModelStatus>(initialStatus);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [copiedMessageIndex, setCopiedMessageIndex] = useState<number | null>(null);
-  const [isStreaming, setIsStreaming] = useState(false);
-  const [streamingContent, setStreamingContent] = useState('');
   const messagesContainerRef = useRef<HTMLDivElement>(null);
-  
-  // Auto-scroll the messages container when messages change or during streaming
-  useEffect(() => {
-    if (messagesContainerRef.current) {
-      messagesContainerRef.current.scrollTop = messagesContainerRef.current.scrollHeight;
-    }
-  }, [messages, streamingContent]);
-
-  useEffect(() => {
-    const handleStreamStart = (event: CustomEvent<{ id: string }>) => {
-      if (event.detail.id === id) {
-        setIsStreaming(true);
-        setStreamingContent('');
-      }
-    };
-
-    const handleStreamChunk = (event: CustomEvent<{ id: string; chunk: string }>) => {
-      if (event.detail.id === id) {
-        setStreamingContent(prev => prev + event.detail.chunk);
-        // Scroll to bottom with each chunk
-        if (messagesContainerRef.current) {
-          messagesContainerRef.current.scrollTop = messagesContainerRef.current.scrollHeight;
-        }
-      }
-    };
-
-    const handleStreamEnd = (event: CustomEvent<{ id: string; webSearch?: boolean }>) => {
-      if (event.detail.id === id) {
-        // Add the complete streamed content as a new message
-        onMessagesUpdate?.([
-          ...messages,
-          { 
-            role: 'assistant', 
-            content: streamingContent,
-            webSearch: event.detail.webSearch 
-          }
-        ]);
-        // Reset streaming state after adding the message
-        setIsStreaming(false);
-        setStreamingContent('');
-      }
-    };
-
-    window.addEventListener('stream-start', handleStreamStart as EventListener);
-    window.addEventListener('stream-chunk', handleStreamChunk as EventListener);
-    window.addEventListener('stream-end', handleStreamEnd as EventListener);
-    
-    return () => {
-      window.removeEventListener('stream-start', handleStreamStart as EventListener);
-      window.removeEventListener('stream-chunk', handleStreamChunk as EventListener);
-      window.removeEventListener('stream-end', handleStreamEnd as EventListener);
-    };
-  }, [id, messages, streamingContent, onMessagesUpdate]);
 
   const handleStatusClick = (e: React.MouseEvent) => {
     e.stopPropagation();
@@ -201,14 +145,12 @@ export default function ChatInterface({
 
   const handleApiKeySave = () => {
     setIsModalOpen(false);
-    // You might want to trigger a refresh or status update here
   };
 
   const handleCopyMessage = (content: string, index: number) => {
     navigator.clipboard.writeText(content);
     setCopiedMessageIndex(index);
     
-    // Reset the copied state after 2 seconds
     setTimeout(() => {
       setCopiedMessageIndex(null);
     }, 2000);
@@ -231,12 +173,10 @@ export default function ChatInterface({
           <div className={styles.modelSelector}>
             <select 
               value={modelName}
-              onChange={(e) => onModelChange?.(e.target.value)}
               className={styles.modelSelect}
+              disabled
             >
-              {providersData[provider].models.map((model: string) => (
-                <option key={model} value={model}>{model}</option>
-              ))}
+              <option value={modelName}>{modelName}</option>
             </select>
             <div className={styles.providerInfo}>
               <span className={styles.provider}>{provider}</span>
@@ -258,8 +198,6 @@ export default function ChatInterface({
           </button>
         </div>
         
-        <p className={styles.description}>{description}</p>
-        
         <div className={styles.messages} ref={messagesContainerRef}>
           {messages.map((message, index) => (
             <div 
@@ -269,15 +207,6 @@ export default function ChatInterface({
               <div className={styles.messageContent}>
                 {formatMessageContent(message.content)}
                 <div className={styles.messageFooter}>
-                  {message.webSearch && (
-                    <div className={styles.webSearchIndicator} title="Web search was used">
-                      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                        <circle cx="12" cy="12" r="10"></circle>
-                        <line x1="2" y1="12" x2="22" y2="12"></line>
-                        <path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"></path>
-                      </svg>
-                    </div>
-                  )}
                   <button 
                     className={styles.messageAction}
                     onClick={() => handleCopyMessage(message.content, index)}
@@ -296,21 +225,21 @@ export default function ChatInterface({
               </div>
             </div>
           ))}
-          
-          {/* Render streaming content if active */}
-          {isStreaming && (
-            <div className={`${styles.message} ${styles.assistant} ${styles.streaming}`}>
-              <div className={styles.messageContent}>
-                {formatMessageContent(streamingContent)}
-                <div className={styles.streamingIndicator}>
-                  <span className={styles.dot}></span>
-                  <span className={styles.dot}></span>
-                  <span className={styles.dot}></span>
-                </div>
-              </div>
-            </div>
-          )}
         </div>
+
+        {onSubmit && (
+          <form onSubmit={onSubmit} className={styles.inputForm}>
+            <input
+              className={styles.input}
+              value={input}
+              onChange={onInputChange}
+              placeholder="Type a message..."
+            />
+            <button type="submit" className={styles.sendButton}>
+              Send
+            </button>
+          </form>
+        )}
       </div>
 
       <Modal isOpen={isModalOpen} onClose={() => setIsModalOpen(false)}>
