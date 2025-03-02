@@ -5,22 +5,25 @@ import { createOpenAI } from '@ai-sdk/openai';
 export const runtime = 'edge';
 
 export async function POST(req: Request) {
-  const { messages, model } = await req.json();
-
-  // Get API key from request header instead of environment variable
-  const apiKey = req.headers.get('X-API-Key');
-  
-  if (!apiKey) {
+  let data;
+  try {
+    data = await req.json();
+  } catch (error) {
     return new Response(
       JSON.stringify({
-        error: 'OpenAI API key not found in request'
+        error: 'Invalid request format',
+        details: error instanceof Error ? error.message : String(error),
       }),
-      {
-        status: 401,
-        headers: {
-          'content-type': 'application/json',
-        },
-      }
+      { status: 400, headers: { 'content-type': 'application/json' } }
+    );
+  }
+
+  const { messages, model } = data;
+  const apiKey = req.headers.get('X-API-Key');
+  if (!apiKey) {
+    return new Response(
+      JSON.stringify({ error: 'OpenAI API key not found in request' }),
+      { status: 401, headers: { 'content-type': 'application/json' } }
     );
   }
 
@@ -41,17 +44,13 @@ export async function POST(req: Request) {
 
     return new Response(result.textStream);
   } catch (error) {
-    console.error('OpenAI Error:', error);
+    console.error('Error calling OpenAI API:', error);
     return new Response(
       JSON.stringify({
-        error: 'Failed to call OpenAI API'
+        error: 'Failed to call OpenAI API',
+        details: error instanceof Error ? error.message : String(error),
       }),
-      {
-        status: 500,
-        headers: {
-          'content-type': 'application/json',
-        },
-      }
+      { status: 500, headers: { 'content-type': 'application/json' } }
     );
   }
 } 
