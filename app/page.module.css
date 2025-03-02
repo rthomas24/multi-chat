@@ -96,7 +96,8 @@
 
 .inputButtons {
   display: flex;
-  gap: 0.5rem;
+  gap: 0.75rem;
+  align-items: center;
 }
 
 .iconButton {
@@ -113,31 +114,51 @@
 }
 
 .webSearchButton {
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid rgba(255, 255, 255, 0.1);
   display: flex;
   align-items: center;
-  gap: 0.5rem;
-  background: transparent;
-  border: 1px solid rgba(255, 255, 255, 0.1);
+  justify-content: center;
   color: #9ca3af;
-  padding: 0.5rem 1rem;
-  border-radius: 6px;
   cursor: pointer;
   transition: all 0.2s ease;
+  padding: 0;
 }
 
 .webSearchButton:hover {
-  background: rgba(255, 255, 255, 0.05);
+  background: rgba(255, 255, 255, 0.1);
   color: #e5e7eb;
 }
 
 .webSearchEnabled {
-  background: rgba(0, 180, 216, 0.1);
+  background: rgba(0, 180, 216, 0.2);
   border-color: rgba(0, 180, 216, 0.5);
   color: #00b4d8;
 }
 
 .webSearchEnabled:hover {
-  background: rgba(0, 180, 216, 0.2);
+  background: rgba(0, 180, 216, 0.3);
+}
+
+.addToolsButton {
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 18px;
+  color: #9ca3af;
+  cursor: pointer;
+  font-size: 0.85rem;
+  padding: 0.5rem 0.75rem;
+  display: flex;
+  align-items: center;
+  transition: all 0.2s ease;
+}
+
+.addToolsButton:hover {
+  background: rgba(255, 255, 255, 0.1);
+  color: #e5e7eb;
 }
 
 .sendButton {

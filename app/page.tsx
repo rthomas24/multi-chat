@@ -248,18 +248,27 @@ export default function Home() {
               className={styles.input}
             />
             <div className={styles.inputActions}>
-              <button
-                type="button"
-                className={`${styles.webSearchButton} ${webSearchEnabled ? styles.webSearchEnabled : ''}`}
-                onClick={() => setWebSearchEnabled(!webSearchEnabled)}
-              >
-                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                  <circle cx="12" cy="12" r="10" />
-                  <line x1="2" y1="12" x2="22" y2="12" />
-                  <path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10z" />
-                </svg>
-                Web Search
-              </button>
+              <div className={styles.inputButtons}>
+                <button
+                  type="button"
+                  className={`${styles.webSearchButton} ${webSearchEnabled ? styles.webSearchEnabled : ''}`}
+                  onClick={() => setWebSearchEnabled(!webSearchEnabled)}
+                  title={webSearchEnabled ? "Disable web search" : "Enable web search"}
+                >
+                  <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                    <circle cx="12" cy="12" r="10" />
+                    <line x1="2" y1="12" x2="22" y2="12" />
+                    <path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10z" />
+                  </svg>
+                </button>
+                <button
+                  type="button"
+                  className={styles.addToolsButton}
+                  title="Add Tools"
+                >
+                  Add Tools +
+                </button>
+              </div>
               <button type="submit" className={styles.sendButton}>
                 Send
               </button>
