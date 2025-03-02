@@ -1,3 +1,7 @@
+import { createOpenAI } from '@ai-sdk/openai';
+// import { openai } from '@ai-sdk/openai';
+import { generateText } from 'ai';
+
 interface ModelResponse {
   content: string;
   error?: string;
@@ -82,39 +86,55 @@ export const callXAI = async ({ prompt, model }: ModelRequest): Promise<ModelRes
 
 // Main function to route to correct provider
 export const callModel = async (provider: string, request: ModelRequest): Promise<ModelResponse> => {
-  if (!API_URL) {
-    return { content: '', error: 'API URL not configured' };
-  }
-
-  const apiKey = localStorage.getItem(`${provider.toLowerCase()}_api_key`);
+  const apiKey = localStorage.getItem(`${provider.toLowerCase()}_api_key`) ?? '';
   
   console.log(`Calling ${provider} with API key:`, apiKey ? 'Key exists' : 'No key found');
-  try {
-    const response = await fetch(API_URL, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        'X-API-Key': apiKey || '', // This will be used by the cloud function
+  const openai = createOpenAI({
+    compatibility: 'strict', // strict mode, enable when using the OpenAI API
+    apiKey
+  })
+
+  const { text, usage, providerMetadata } = await generateText({
+    model: openai('gpt-4o'),
+    messages: [
+      {
+        role: 'system',
+        content: 'You are a helpful AI assistant. You aim to provide accurate, relevant, and well-reasoned responses while being direct and concise. You will maintain a professional and friendly tone throughout our conversation.',
       },
-      body: JSON.stringify({
-        prompt: request.prompt,
-        model: request.model,
-        provider: provider,
-        webSearch: request.webSearch || false
-      })
-    });
+      {
+        role: 'user',
+        content: request.prompt
+      }
+    ]
+  });
+
+  // try {
+  //   const response = await fetch(API_URL, {
+  //     method: 'POST',
+  //     headers: {
+  //       'Content-Type': 'application/json',
+  //       'X-API-Key': apiKey || '', // This will be used by the cloud function
+  //     },
+  //     body: JSON.stringify({
+  //       prompt: request.prompt,
+  //       model: request.model,
+  //       provider: provider,
+  //       webSearch: request.webSearch || false
+  //     })
+  //   });
     
-    if (!response.ok) {
-      const errorText = await response.text();
-      throw new Error(`HTTP error! status: ${response.status}, message: ${errorText}`);
-    }
+    // if (!response.ok) {
+    //   const errorText = await response.text();
+    //   throw new Error(`HTTP error! status: ${response.status}, message: ${errorText}`);
+    // }
     
-    return await response.json();
-  } catch (error) {
-    console.error(`${provider} API Error:`, error);
-    return { 
-      content: '', 
-      error: `Failed to call ${provider} API: ${error instanceof Error ? error.message : 'Unknown error'}`
-    };
-  }
-}; 
+    return { content: text };
+  } 
+  // catch (error) {
+  //   console.error(`${provider} API Error:`, error);
+  //   return { 
+  //     content: '', 
+  //     error: `Failed to call ${provider} API: ${error instanceof Error ? error.message : 'Unknown error'}`
+  //   };
+  // }
+// }; 

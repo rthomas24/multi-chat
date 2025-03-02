@@ -43,7 +43,3 @@ next-env.d.ts
 # Add this to .gitignore
 .env.local
 .env.*.local
-
-# firebase
-.firebaserc
-functions/venv

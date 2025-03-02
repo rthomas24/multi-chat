@@ -9,13 +9,17 @@
     "lint": "next lint"
   },
   "dependencies": {
+    "@ai-sdk/openai": "^1.1.15",
+    "@anthropic-ai/sdk": "^0.39.0",
     "@react-spring/web": "^9.7.5",
     "@use-gesture/react": "^10.3.1",
-    "firebase": "^11.3.1",
+    "ai": "^4.1.47",
     "highlight.js": "^11.11.1",
     "next": "15.1.7",
+    "openai": "^4.86.1",
     "react": "^19.0.0",
-    "react-dom": "^19.0.0"
+    "react-dom": "^19.0.0",
+    "zod": "^3.24.2"
   },
   "devDependencies": {
     "@types/node": "^20",
