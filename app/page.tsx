@@ -8,6 +8,7 @@ import Header from '@/components/Header';
 import AddModelCard from '@/components/AddModelCard';
 import providersData from '@/data/providers.json';
 import { Message } from 'ai';
+import { retrieveApiKey } from '@/utils/apiKeyEncryption';
 
 interface ChatModel {
   id: string;
@@ -157,8 +158,25 @@ export default function Home() {
     setUserInput('');
 
     activeModels.forEach(model => {
-      const apiKey = localStorage.getItem(`${model.provider.toLowerCase()}_api_key`);
-      if (!apiKey) return;
+      const apiKey = retrieveApiKey(model.provider);
+      if (!apiKey) {
+        console.error(`No API key found for ${model.provider}`);
+        
+        // Update the message to show the error
+        const responseId = `asst-${Date.now()}`;
+        const updatedChat = updatedChats.find(chat => chat.id === model.id);
+        if (!updatedChat) return;
+        const messagesWithError = [...updatedChat.messages, { 
+          id: responseId, 
+          role: 'assistant' as const, 
+          content: `Error: No API key found for ${model.provider}. Please add your API key in the settings.` 
+        }];
+        setChatModels(prev =>
+          prev.map(chat => (chat.id === model.id ? { ...chat, messages: messagesWithError } : chat))
+        );
+        return;
+      }
+      
       const responseId = `asst-${Date.now()}`;
       const updatedChat = updatedChats.find(chat => chat.id === model.id);
       if (!updatedChat) return;
@@ -166,15 +184,27 @@ export default function Home() {
       setChatModels(prev =>
         prev.map(chat => (chat.id === model.id ? { ...chat, messages: messagesWithAssistant } : chat))
       );
+      
       const apiUrl = model.apiRoute.startsWith('http') ? model.apiRoute : `${window.location.origin}${model.apiRoute}`;
+      
       fetch(apiUrl, {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json', 'X-API-Key': apiKey },
-        body: JSON.stringify({ messages: updatedChat.messages, model: model.modelName, webSearch: webSearchEnabled }),
+        headers: { 
+          'Content-Type': 'application/json', 
+          'X-API-Key': apiKey 
+        },
+        body: JSON.stringify({ 
+          messages: updatedChat.messages, 
+          model: model.modelName, 
+          webSearch: webSearchEnabled 
+        }),
       })
         .then(response => {
-          if (!response.ok) throw new Error(`API call failed with status ${response.status}`);
+          if (!response.ok) {
+            throw new Error(`API call failed with status ${response.status}`);
+          }
           const contentType = response.headers.get('content-type');
+          
           if (contentType && contentType.includes('application/json')) {
             return response.json().then(data => {
               setChatModels(prev =>
@@ -194,10 +224,17 @@ export default function Home() {
             const reader = response.body!.getReader();
             const decoder = new TextDecoder();
             let content = '';
+            
             const readStream = () => {
               reader.read().then(({ done, value }) => {
-                if (done) return;
-                content += decoder.decode(value, { stream: true });
+                if (done) {
+                  return;
+                }
+                
+                const chunk = decoder.decode(value, { stream: true });
+                console.log(`Received chunk for ${model.provider}:`, chunk);
+                content += chunk;
+                
                 setChatModels(prev =>
                   prev.map(chat =>
                     chat.id === model.id
@@ -211,12 +248,15 @@ export default function Home() {
                   )
                 );
                 readStream();
-              }).catch(() => {});
+              }).catch((error) => {
+                console.error(`Error reading stream for ${model.provider}:`, error);
+              });
             };
             readStream();
           }
         })
         .catch(error => {
+          console.error(`Error calling ${model.provider} API:`, error);
           setChatModels(prev =>
             prev.map(chat =>
               chat.id === model.id

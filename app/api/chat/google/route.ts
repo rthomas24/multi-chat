@@ -19,6 +19,15 @@ export async function POST(req: Request) {
   }
 
   const { messages, model } = data;
+  
+  // Validate messages
+  if (!Array.isArray(messages) || messages.length === 0) {
+    return new Response(
+      JSON.stringify({ error: 'Invalid or empty messages array' }),
+      { status: 400, headers: { 'content-type': 'application/json' } }
+    );
+  }
+  
   const apiKey = req.headers.get('X-API-Key');
   if (!apiKey) {
     return new Response(
@@ -28,7 +37,8 @@ export async function POST(req: Request) {
   }
 
   try {
-    console.log('Google API Key:', apiKey ? 'Key exists' : 'No key found');
+    // Remove API key logging, just log that a request was received
+    console.log('Processing Google AI request');
     
     // Set API key in process.env for the google SDK to use
     process.env.GOOGLE_API_KEY = apiKey;
@@ -46,11 +56,13 @@ export async function POST(req: Request) {
 
     return new Response(result.textStream);
   } catch (error) {
-    console.error('Error calling Google API:', error);
+    // Improve error logging without exposing sensitive information
+    console.error('Error calling Google API:', error instanceof Error ? error.message : 'Unknown error');
+    
     return new Response(
       JSON.stringify({
         error: 'Failed to call Google API',
-        details: error instanceof Error ? error.message : String(error),
+        details: error instanceof Error ? error.message : 'An unexpected error occurred',
       }),
       { status: 500, headers: { 'content-type': 'application/json' } }
     );

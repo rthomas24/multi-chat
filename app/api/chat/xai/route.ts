@@ -19,6 +19,15 @@ export async function POST(req: Request) {
   }
 
   const { messages, model } = data;
+  
+  // Validate messages
+  if (!Array.isArray(messages) || messages.length === 0) {
+    return new Response(
+      JSON.stringify({ error: 'Invalid or empty messages array' }),
+      { status: 400, headers: { 'content-type': 'application/json' } }
+    );
+  }
+  
   const apiKey = req.headers.get('X-API-Key');
   if (!apiKey) {
     return new Response(
@@ -28,7 +37,9 @@ export async function POST(req: Request) {
   }
 
   try {
-    console.log('xAI API Key:', apiKey ? 'Key exists' : 'No key found');
+    // Log request without exposing API key
+    console.log('Processing xAI request');
+    
     const xai = createXai({ apiKey });
     const result = streamText({
       model: xai(model || 'grok-2-1212'),
@@ -42,11 +53,13 @@ export async function POST(req: Request) {
     });
     return new Response(result.textStream);
   } catch (error) {
-    console.error('Error calling xAI API:', error);
+    // Improve error logging without exposing sensitive information
+    console.error('Error calling xAI API:', error instanceof Error ? error.message : 'Unknown error');
+    
     return new Response(
       JSON.stringify({
         error: 'Failed to call xAI API',
-        details: error instanceof Error ? error.message : String(error),
+        details: error instanceof Error ? error.message : 'An unexpected error occurred',
       }),
       { status: 500, headers: { 'content-type': 'application/json' } }
     );
