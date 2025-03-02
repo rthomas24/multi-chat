@@ -2,6 +2,9 @@
 
 Multi-Chat is a Next.js application that allows you to chat with multiple AI models simultaneously. Compare responses from different AI providers side by side in a clean, intuitive interface.
 
+<img width="1512" alt="Screenshot 2025-03-02 at 3 42 36 PM" src="https://github.com/user-attachments/assets/c99ef5f1-776e-441c-820e-a9f6f2296b3e" />
+
+
 ## Features
 
 - **Multi-Model Chat**: Chat with multiple AI models at the same time
