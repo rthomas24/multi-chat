@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import styles from './ChatInterface.module.css';
 import { ModelStatus } from '@/types/Status';
 import Modal from './Modal';
@@ -133,30 +133,62 @@ export default function ChatInterface({
   const [status, setStatus] = useState<ModelStatus>(initialStatus);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [copiedMessageIndex, setCopiedMessageIndex] = useState<number | null>(null);
+  const [isStreaming, setIsStreaming] = useState(false);
+  const [streamingContent, setStreamingContent] = useState('');
+  const messagesContainerRef = useRef<HTMLDivElement>(null);
+  
+  // Auto-scroll the messages container when messages change or during streaming
+  useEffect(() => {
+    if (messagesContainerRef.current) {
+      messagesContainerRef.current.scrollTop = messagesContainerRef.current.scrollHeight;
+    }
+  }, [messages, streamingContent]);
 
   useEffect(() => {
-    const handleModelResponse = (event: CustomEvent<{ id: string; content: string; error?: string; webSearch?: boolean }>) => {
+    const handleStreamStart = (event: CustomEvent<{ id: string }>) => {
       if (event.detail.id === id) {
-        if (event.detail.error) {
-          // Handle error
-          return;
+        setIsStreaming(true);
+        setStreamingContent('');
+      }
+    };
+
+    const handleStreamChunk = (event: CustomEvent<{ id: string; chunk: string }>) => {
+      if (event.detail.id === id) {
+        setStreamingContent(prev => prev + event.detail.chunk);
+        // Scroll to bottom with each chunk
+        if (messagesContainerRef.current) {
+          messagesContainerRef.current.scrollTop = messagesContainerRef.current.scrollHeight;
         }
+      }
+    };
+
+    const handleStreamEnd = (event: CustomEvent<{ id: string; webSearch?: boolean }>) => {
+      if (event.detail.id === id) {
+        // Add the complete streamed content as a new message
         onMessagesUpdate?.([
           ...messages,
           { 
             role: 'assistant', 
-            content: event.detail.content,
+            content: streamingContent,
             webSearch: event.detail.webSearch 
           }
         ]);
+        // Reset streaming state after adding the message
+        setIsStreaming(false);
+        setStreamingContent('');
       }
     };
 
-    window.addEventListener('model-response', handleModelResponse as EventListener);
+    window.addEventListener('stream-start', handleStreamStart as EventListener);
+    window.addEventListener('stream-chunk', handleStreamChunk as EventListener);
+    window.addEventListener('stream-end', handleStreamEnd as EventListener);
+    
     return () => {
-      window.removeEventListener('model-response', handleModelResponse as EventListener);
+      window.removeEventListener('stream-start', handleStreamStart as EventListener);
+      window.removeEventListener('stream-chunk', handleStreamChunk as EventListener);
+      window.removeEventListener('stream-end', handleStreamEnd as EventListener);
     };
-  }, [id, messages, onMessagesUpdate]);
+  }, [id, messages, streamingContent, onMessagesUpdate]);
 
   const handleStatusClick = (e: React.MouseEvent) => {
     e.stopPropagation();
@@ -228,7 +260,7 @@ export default function ChatInterface({
         
         <p className={styles.description}>{description}</p>
         
-        <div className={styles.messages}>
+        <div className={styles.messages} ref={messagesContainerRef}>
           {messages.map((message, index) => (
             <div 
               key={index} 
@@ -264,6 +296,20 @@ export default function ChatInterface({
               </div>
             </div>
           ))}
+          
+          {/* Render streaming content if active */}
+          {isStreaming && (
+            <div className={`${styles.message} ${styles.assistant} ${styles.streaming}`}>
+              <div className={styles.messageContent}>
+                {formatMessageContent(streamingContent)}
+                <div className={styles.streamingIndicator}>
+                  <span className={styles.dot}></span>
+                  <span className={styles.dot}></span>
+                  <span className={styles.dot}></span>
+                </div>
+              </div>
+            </div>
+          )}
         </div>
       </div>
 

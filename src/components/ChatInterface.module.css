@@ -426,4 +426,42 @@
 
 .webSearchIndicator svg {
   margin-right: 4px;
+}
+
+/* Add these styles to your existing CSS file */
+
+.streaming {
+  opacity: 0.8;
+}
+
+.streamingIndicator {
+  display: flex;
+  align-items: center;
+  margin-top: 8px;
+}
+
+.dot {
+  width: 8px;
+  height: 8px;
+  background-color: #888;
+  border-radius: 50%;
+  margin-right: 4px;
+  animation: pulse 1.5s infinite ease-in-out;
+}
+
+.dot:nth-child(2) {
+  animation-delay: 0.3s;
+}
+
+.dot:nth-child(3) {
+  animation-delay: 0.6s;
+}
+
+@keyframes pulse {
+  0%, 100% {
+    opacity: 0.4;
+  }
+  50% {
+    opacity: 1;
+  }
 } 

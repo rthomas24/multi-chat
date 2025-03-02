@@ -1,7 +1,8 @@
 "use client";
 
 import { useState } from 'react';
-import { messageQueue } from '@/utils/messageQueue';
+// Remove this import since we're not using the queue anymore
+// import { messageQueue } from '@/utils/messageQueue';
 import styles from './ChatInput.module.css';
 import { ModelStatus } from '@/types/Status';
 
@@ -23,19 +24,8 @@ export default function ChatInput({ activeModels, onMessageSent }: ChatInputProp
     e.preventDefault();
     if (!input.trim()) return;
 
-    // Add message to queue for all active models
-    const queueItems = activeModels
-      .filter(model => model.status === ModelStatus.ACTIVE)
-      .map(model => ({
-        id: model.id,
-        provider: model.provider,
-        modelName: model.modelName,
-        prompt: input,
-        webSearch: webSearchEnabled // Pass the web search flag
-      }));
-
-    messageQueue.addToQueue(queueItems);
-    onMessageSent(input, webSearchEnabled); // Pass the web search flag to the callback
+    // Just call onMessageSent which handles the API calls directly
+    onMessageSent(input, webSearchEnabled); 
     setInput('');
   };
 

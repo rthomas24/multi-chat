@@ -9,6 +9,7 @@ import { useState, useRef } from "react";
 import AddModelCard from '@/components/AddModelCard';
 import ChatInput from '@/components/ChatInput';
 import providersData from '@/data/providers.json';
+import { callOpenAI, callAnthropic, callGoogle, callXAI } from '@/utils/modelProviders';
 
 // Add this with the other interfaces at the top
 interface Message {
@@ -213,7 +214,7 @@ export default function Home() {
     }
   };
 
-  const handleMessageSent = (message: string, webSearch?: boolean) => {
+  const handleMessageSent = async (message: string, webSearch?: boolean) => {
     // Add message to all active interfaces
     setSortedInterfaces(prev => 
       prev.map(chat => ({
@@ -223,6 +224,136 @@ export default function Home() {
           chat.messages
       }))
     );
+
+    // Process message with active models
+    const activeModels = sortedInterfaces.filter(
+      chat => chat.initialStatus === ModelStatus.ACTIVE
+    );
+
+    for (const model of activeModels) {
+      // Dispatch stream start event
+      window.dispatchEvent(
+        new CustomEvent('stream-start', { detail: { id: model.id } })
+      );
+
+      // Call the appropriate provider with streaming enabled
+      let response;
+      const request = { 
+        prompt: message, 
+        model: model.modelName, 
+        webSearch, 
+      };
+
+      try {
+        switch (model.provider) {
+          case 'OpenAI':
+            response = await callOpenAI(request);
+            break;
+          case 'Anthropic':
+            response = await callAnthropic(request);
+            break;
+          case 'Google':
+            response = await callGoogle(request);
+            break;
+          case 'xAI':
+            response = await callXAI(request);
+            break;
+          default:
+            console.error('Unknown provider:', model.provider);
+            continue;
+        }
+
+        if (response.error) {
+          // Handle error
+          console.error(`Error from ${model.provider}:`, response.error);
+          window.dispatchEvent(
+            new CustomEvent('stream-end', {
+              detail: {
+                id: model.id,
+                webSearch
+              }
+            })
+          );
+          continue;
+        }
+
+        if (response.stream) {
+          // Process the stream
+          try {
+            const reader = response.stream.getReader();
+            
+            while (true) {
+              const { done, value } = await reader.read();
+              
+              if (done) {
+                break;
+              }
+              
+              // Dispatch chunk event
+              window.dispatchEvent(
+                new CustomEvent('stream-chunk', {
+                  detail: {
+                    id: model.id,
+                    chunk: value
+                  }
+                })
+              );
+            }
+            
+            // Dispatch stream end event
+            window.dispatchEvent(
+              new CustomEvent('stream-end', {
+                detail: {
+                  id: model.id,
+                  webSearch
+                }
+              })
+            );
+          } catch (error) {
+            console.error('Error processing stream:', error);
+            // Dispatch stream end event to clean up UI
+            window.dispatchEvent(
+              new CustomEvent('stream-end', {
+                detail: {
+                  id: model.id,
+                  webSearch
+                }
+              })
+            );
+          }
+        } else {
+          // If no stream is available, end the stream with the content
+          window.dispatchEvent(
+            new CustomEvent('stream-chunk', {
+              detail: {
+                id: model.id,
+                chunk: response.content
+              }
+            })
+          );
+          
+          window.dispatchEvent(
+            new CustomEvent('stream-end', {
+              detail: {
+                id: model.id,
+                webSearch
+              }
+            })
+          );
+        }
+      } catch (error) {
+        console.error(`Error calling ${model.provider}:`, error);
+        // Dispatch stream end event to clean up UI
+        window.dispatchEvent(
+          new CustomEvent('stream-end', {
+            detail: {
+              id: model.id,
+              webSearch
+            }
+          })
+        );
+      }
+    }
   };
 
   const handleMessagesUpdate = (id: string, newMessages: Message[]) => {
