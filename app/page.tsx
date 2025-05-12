@@ -12,6 +12,15 @@ import { retrieveApiKey } from '@/utils/apiKeyEncryption';
 
 type ProviderKey = keyof typeof providersData;
 
+const AGGREGATOR_SYSTEM_PROMPT = `You are an expert AI response synthesizer. You will be given an original user query followed by several AI-generated responses to that query. Your task is to:
+1. Analyze all provided AI responses in conjunction with the original user query.
+2. Identify the most accurate, relevant, and well-explained parts from each response.
+3. Synthesize these parts into a single, coherent, and comprehensive final answer.
+4. If there are conflicting pieces of information across responses, use your best judgment to determine the most accurate one or clearly state the discrepancy if it's irresolvable.
+5. Do not refer to the fact that you are synthesizing responses (e.g., "Based on the responses provided..."). Directly present the synthesized answer as if you are answering the original query yourself.
+6. Ensure the final response is well-structured, easy to understand, and directly addresses the original user query.
+Present only this final, synthesized response.`;
+
 const modelDisplayNameMap: Record<string, string> = {
   'claude-3-5-sonnet-20240620': 'Claude 3.5 Sonnet',
   'gpt-4o': 'GPT-4o',
@@ -34,6 +43,7 @@ interface ChatModel {
   initialStatus: ModelStatus;
   apiRoute: string;
   messages: Message[];
+  isAggregator?: boolean; // New flag
 }
 
 const initialChatModels: ChatModel[] = [
@@ -77,12 +87,164 @@ const initialChatModels: ChatModel[] = [
     apiRoute: '/api/chat/google',
     messages: [],
   },
+  {
+    id: 'synthesizer-gpt4o-1',
+    modelName: 'gpt-4o',
+    displayName: 'Synthesizer (GPT-4o)',
+    provider: 'OpenAI',
+    description: 'Synthesizes responses from other active models into a final answer.',
+    initialStatus: ModelStatus.ACTIVE,
+    apiRoute: '/api/chat/openai',
+    messages: [],
+    isAggregator: true,
+  },
 ];
 
 const sortByStatus = (a: ChatModel, b: ChatModel) => {
+  // Rule 1: Aggregator models always come after non-aggregator models.
+  if (a.isAggregator && !b.isAggregator) {
+    return 1; // a comes after b
+  }
+  if (!a.isAggregator && b.isAggregator) {
+    return -1; // a comes before b
+  }
+
+  // Rule 2: If both are of the same type (both aggregators or both non-aggregators),
+  // or for general sorting, use their status.
   const order = { [ModelStatus.ACTIVE]: 0, [ModelStatus.READY]: 1, [ModelStatus.INACTIVE]: 2 };
+  
+  // If their primary sort keys (aggregator vs. non-aggregator) are the same,
+  // then sort by status.
   return order[a.initialStatus] - order[b.initialStatus];
 };
+
+// Helper function to fetch and stream response for a single primary model
+async function fetchAndStreamPrimaryResponse(
+  model: ChatModel,
+  userMessageContent: string, // Original user input, potentially for context or logging
+  messagesForApi: Message[], // Direct messages to send to the API
+  placeholderId: string, // UI placeholder ID to update
+  webSearchEnabled: boolean,
+  onStreamUpdate: (modelId: string, newContent: string, targetMessageId: string) => void,
+  onStreamEnd?: (modelId: string, finalContent: string) => void,
+  onStreamError?: (modelId: string, errorMessage: string, targetMessageId: string) => void
+): Promise<string> {
+  return new Promise((resolve, reject) => {
+    const storageKey = `${model.provider.toLowerCase()}_api_key`;
+    const apiKey = typeof window !== 'undefined' ? localStorage.getItem(storageKey) : null;
+
+    if (!apiKey) {
+      const errorContent = `Error: No API key found for ${model.provider}. Please add your API key.`;
+      onStreamError?.(model.id, errorContent, placeholderId);
+      reject(new Error(errorContent));
+      return;
+    }
+
+    const apiUrl = model.apiRoute.startsWith('http') ? model.apiRoute : `${window.location.origin}${model.apiRoute}`;
+    let accumulatedContent = '';
+
+    fetch(apiUrl, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', 'X-API-Key': apiKey },
+      body: JSON.stringify({
+        messages: messagesForApi,
+        model: model.modelName,
+        webSearch: webSearchEnabled,
+      }),
+    })
+    .then(async response => {
+      if (!response.ok || !response.body) {
+        const errorText = await response.text().catch(() => 'Failed to get error text.');
+        const errorMsg = `API call failed for ${model.displayName}: ${response.status} ${errorText || 'No response body'}`;
+        onStreamError?.(model.id, errorMsg, placeholderId);
+        reject(new Error(errorMsg));
+        return;
+      }
+      const reader = response.body.getReader();
+      const decoder = new TextDecoder();
+      const readStream = () => {
+        reader.read().then(({ done, value }) => {
+          if (done) {
+            onStreamEnd?.(model.id, accumulatedContent);
+            resolve(accumulatedContent);
+            return;
+          }
+          const chunk = decoder.decode(value, { stream: true });
+          accumulatedContent += chunk;
+          onStreamUpdate(model.id, accumulatedContent, placeholderId);
+          readStream();
+        }).catch((error) => {
+          const streamErrorMsg = `Error reading stream for ${model.displayName}: ${error.message}`;
+          onStreamError?.(model.id, streamErrorMsg, placeholderId);
+          reject(error);
+        });
+      };
+      readStream();
+    })
+    .catch(error => {
+      const fetchErrorMsg = `Fetch error for ${model.displayName}: ${error.message}`;
+      onStreamError?.(model.id, fetchErrorMsg, placeholderId);
+      reject(error);
+    });
+  });
+}
+
+// New function to process the aggregator model
+async function processAggregatorModel(
+  aggregatorModel: ChatModel,
+  originalUserInput: string,
+  primaryModelSettledResponses: PromiseSettledResult<string>[],
+  activePrimaryModels: ChatModel[], // Needed to map responses to displayNames
+  setChatModelsCallback: React.Dispatch<React.SetStateAction<ChatModel[]>>,
+  onStreamUpdateCallback: (modelId: string, newContent: string, targetMessageId: string) => void,
+  onStreamErrorCallback: (modelId: string, errorMessage: string, targetMessageId: string) => void
+) {
+  let compiledResponsesContent = `Original User Query:\n${originalUserInput}\n\nAI Responses:\n`;
+  let hasSuccessfulPrimaryResponses = false;
+
+  primaryModelSettledResponses.forEach((result, index) => {
+    const model = activePrimaryModels[index];
+    if (result.status === 'fulfilled') {
+      compiledResponsesContent += `\n--- Response from ${model.displayName} ---\n${result.value}\n--- End of Response ---\n`;
+      hasSuccessfulPrimaryResponses = true;
+    } else {
+      compiledResponsesContent += `\n--- Error from ${model.displayName} ---\n${result.reason?.message || 'Failed to get response'}\n--- End of Error ---\n`;
+    }
+  });
+
+  if (!hasSuccessfulPrimaryResponses && activePrimaryModels.length > 0) {
+    // Optional: Add a note to compiledResponsesContent if all primary models failed
+    // compiledResponsesContent += "\n\nNote: All primary AI models failed to provide a response.";
+  }
+
+  const aggregatorSystemMessage: Message = { id: `sys-agg-${Date.now()}`, role: 'system', content: AGGREGATOR_SYSTEM_PROMPT };
+  const aggregatorUserPrompt: Message = { id: `user-agg-${Date.now()}`, role: 'user', content: compiledResponsesContent };
+  const aggregatorPlaceholderId = `asst-agg-ph-${aggregatorModel.id}-${Date.now()}`;
+
+  // Update aggregator UI with its prompt messages and placeholder
+  setChatModelsCallback(prev =>
+    prev.map(chat =>
+      chat.id === aggregatorModel.id
+        ? { ...chat, messages: [aggregatorUserPrompt, { id: aggregatorPlaceholderId, role: 'assistant' as const, content: '' }] }
+        : chat
+    ).sort(sortByStatus)
+  );
+  
+  try {
+    await fetchAndStreamPrimaryResponse(
+      aggregatorModel,
+      compiledResponsesContent, 
+      [aggregatorSystemMessage, aggregatorUserPrompt],
+      aggregatorPlaceholderId,
+      false, 
+      onStreamUpdateCallback,
+      undefined,
+      onStreamErrorCallback
+    );
+  } catch (error) {
+    console.error(`Aggregator processing failed for ${aggregatorModel.displayName}:`, error);
+  }
+}
 
 export default function Home() {
   const [chatModels, setChatModels] = useState<ChatModel[]>([...initialChatModels].sort(sortByStatus));
@@ -101,7 +263,7 @@ export default function Home() {
   };
 
   const handleDelete = (id: string) => {
-    setChatModels(prev => prev.filter(model => model.id !== id));
+    setChatModels(prev => prev.filter(model => model.id !== id).sort(sortByStatus));
   };
 
   const handleSwitchModel = (chatId: string, newModelName: string) => {
@@ -112,28 +274,24 @@ export default function Home() {
             ...chat,
             modelName: newModelName,
             displayName: modelDisplayNameMap[newModelName] || newModelName,
-            // Optionally, clear messages or add a system message about model change
-            // messages: [], 
+            messages: [], // Clear messages on model switch
           };
         }
         return chat;
-      })
+      }).sort(sortByStatus)
     );
   };
 
   const handleAddModel = (newModelData: Omit<ChatModel, 'id' | 'apiRoute' | 'messages' | 'displayName'> & { modelName: string }) => {
     const apiRoute = `/api/chat/${newModelData.provider.toLowerCase()}`;
-    const count = chatModels.filter(m => m.modelName === newModelData.modelName).length;
+    const count = chatModels.filter(m => m.modelName === newModelData.modelName && m.provider === newModelData.provider).length; // Ensure count is specific to provider+model
     const displayName = modelDisplayNameMap[newModelData.modelName] || newModelData.modelName;
     const newChat: ChatModel = {
       ...newModelData,
-      id: `${newModelData.modelName.toLowerCase().replace(/[\s.-]+/g, '-')}-${count + 1}`,
+      id: `${newModelData.provider.toLowerCase()}-${newModelData.modelName.toLowerCase().replace(/[\s.-]+/g, '-')}-${count + 1}`,
       apiRoute,
       displayName,
-      messages: [
-        { id: Date.now().toString(), role: 'user', content: 'Hello! What can you help me with?' },
-        { id: Date.now().toString(), role: 'assistant', content: "I'm ready to assist you with any questions or tasks..." },
-      ],
+      messages: [],
     };
     setChatModels(prev => [...prev, newChat].sort(sortByStatus));
   };
@@ -189,117 +347,104 @@ export default function Home() {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!userInput.trim()) return;
-    const userMessage: Message = { id: Date.now().toString(), role: 'user', content: userInput };
-    const updatedChats = chatModels.map(chat =>
-      chat.initialStatus === ModelStatus.ACTIVE ? { ...chat, messages: [...chat.messages, userMessage] } : chat
+
+    const originalUserInput = userInput;
+    const userMessageId = `user-${Date.now()}`;
+    const userMessageForDisplay: Message = { id: userMessageId, role: 'user', content: originalUserInput };
+
+    const activePrimaryModels = chatModels.filter(m => m.initialStatus === ModelStatus.ACTIVE && !m.isAggregator);
+    const activeAggregatorModel = chatModels.find(m => m.initialStatus === ModelStatus.ACTIVE && m.isAggregator);
+
+    const placeholderMap = new Map<string, string>();
+
+    setChatModels(prev =>
+      prev.map(chat => {
+        if (chat.initialStatus === ModelStatus.ACTIVE) {
+          const messagesWithUser = [...chat.messages, userMessageForDisplay];
+          if (!chat.isAggregator) {
+            const placeholderId = `asst-ph-${chat.id}-${Date.now()}`;
+            placeholderMap.set(chat.id, placeholderId);
+            return { ...chat, messages: [...messagesWithUser, { id: placeholderId, role: 'assistant' as const, content: '' }] };
+          } else {
+            return { ...chat, messages: messagesWithUser };
+          }
+        }
+        return chat;
+      }).sort(sortByStatus)
     );
-    setChatModels(updatedChats);
     setUserInput('');
 
-    activeModels.forEach(model => {
-      const storageKey = `${model.provider.toLowerCase()}_api_key`;
-      const apiKey = localStorage.getItem(storageKey);
-
-      if (!apiKey) {
-        console.error(`No API key found for ${model.provider}`);
-        
-        // Update the message to show the error
-        const responseId = `asst-${Date.now()}`;
-        const updatedChat = updatedChats.find(chat => chat.id === model.id);
-        if (!updatedChat) return;
-        const messagesWithError = [...updatedChat.messages, { 
-          id: responseId, 
-          role: 'assistant' as const, 
-          content: `Error: No API key found for ${model.provider}. Please add your API key in the settings.` 
-        }];
-        setChatModels(prev =>
-          prev.map(chat => (chat.id === model.id ? { ...chat, messages: messagesWithError } : chat))
-        );
-        return;
-      }
-      
-      const responseId = `asst-${Date.now()}`;
-      const updatedChat = updatedChats.find(chat => chat.id === model.id);
-      if (!updatedChat) return;
-      const messagesWithAssistant = [...updatedChat.messages, { id: responseId, role: 'assistant' as const, content: '' }];
-      setChatModels(prev =>
-        prev.map(chat => (chat.id === model.id ? { ...chat, messages: messagesWithAssistant } : chat))
-      );
-      
-      const apiUrl = model.apiRoute.startsWith('http') ? model.apiRoute : `${window.location.origin}${model.apiRoute}`;
-      
-      fetch(apiUrl, {
-        method: 'POST',
-        headers: { 
-          'Content-Type': 'application/json', 
-          'X-API-Key': apiKey 
-        },
-        body: JSON.stringify({ 
-          messages: updatedChat.messages, 
-          model: model.modelName, 
-          webSearch: webSearchEnabled 
-        }),
-      })
-        .then(response => {
-          if (!response.ok) {
-            throw new Error(`API call failed with status ${response.status}`);
+    const onStreamUpdate = (modelId: string, newContent: string, targetMessageId: string) => {
+      setChatModels(prev => {
+        const updatedModels = prev.map(chat => {
+          if (chat.id === modelId) {
+            const updatedMessages = chat.messages.map(msg =>
+              msg.id === targetMessageId ? { ...msg, content: newContent } : msg
+            );
+            return { ...chat, messages: updatedMessages };
           }
-          const contentType = response.headers.get('content-type');
-          
-          if (contentType && contentType.includes('application/json')) {
-            return response.json().then(data => {
-              setChatModels(prev =>
-                prev.map(chat =>
-                  chat.id === model.id
-                    ? {
-                        ...chat,
-                        messages: chat.messages.map(msg =>
-                          msg.id === responseId ? { ...msg, content: data.content || JSON.stringify(data) } : msg
-                        ),
-                      }
-                    : chat
-                )
-              );
-            });
-          } else {
-            const reader = response.body!.getReader();
-            const decoder = new TextDecoder();
-            let content = '';
-            
-            const readStream = () => {
-              reader.read().then(({ done, value }) => {
-                if (done) {
-                  return;
-                }
-                
-                const chunk = decoder.decode(value, { stream: true });
-                content += chunk;
-                
-                setChatModels(prev =>
-                  prev.map(chat =>
-                    chat.id === model.id
-                      ? {
-                          ...chat,
-                          messages: chat.messages.map(msg =>
-                            msg.id === responseId ? { ...msg, content } : msg
-                          ),
-                        }
-                      : chat
-                  )
-                );
-                readStream();
-              }).catch((error) => {
-                console.error(`Error reading stream for ${model.provider}:`, error);
-              });
-            };
-            readStream();
-          }
-        })
-        .catch(error => {
-          console.error(`Error submitting request to ${model.provider}:`, error);
+          return chat;
         });
+        return updatedModels.sort(sortByStatus);
+      });
+    };
+
+    const onStreamError = (modelId: string, errorMessage: string, targetMessageId: string) => {
+      setChatModels(prev =>
+        prev.map(chat =>
+          chat.id === modelId
+            ? { ...chat, messages: chat.messages.map(msg => msg.id === targetMessageId ? { ...msg, content: `Error: ${errorMessage}` } : msg) }
+            : chat
+        ).sort(sortByStatus)
+      );
+    };
+
+    const onStreamEndPrimary = (modelId: string, finalContent: string) => {
+      const targetMessageId = placeholderMap.get(modelId);
+      setChatModels(prev => {
+        const modelExists = prev.some(chat => chat.id === modelId);
+        if (!modelExists) {
+            return prev.sort(sortByStatus);
+        }
+        return prev.map(chat =>
+          chat.id === modelId
+            ? { ...chat, messages: chat.messages.map(msg => msg.id === targetMessageId ? { ...msg, content: finalContent } : msg) }
+            : chat
+        ).sort(sortByStatus);
+      });
+    };
+
+    const responsePromises = activePrimaryModels.map(model => {
+      const messagesForThisApiCall = [...model.messages, userMessageForDisplay];
+      const placeholderId = placeholderMap.get(model.id)!;
+      return fetchAndStreamPrimaryResponse(
+        model, 
+        originalUserInput, 
+        messagesForThisApiCall,
+        placeholderId, 
+        webSearchEnabled, 
+        onStreamUpdate, 
+        onStreamEndPrimary,
+        onStreamError
+      );
     });
+
+    const settledResponses = await Promise.allSettled(responsePromises);
+
+    // If aggregator is active, compile and send
+    if (activeAggregatorModel) {
+      await processAggregatorModel(
+        activeAggregatorModel,
+        originalUserInput,
+        settledResponses,
+        activePrimaryModels,
+        setChatModels,
+        onStreamUpdate,
+        onStreamError
+      );
+    }
   };
+
   return (
     <div className={styles.page}>
       <Header />
@@ -337,6 +482,7 @@ export default function Home() {
                   })) || []
                 )}
                 onSwitchModel={(newModelName) => handleSwitchModel(chat.id, newModelName)}
+                isAggregator={chat.isAggregator}
               />
             </div>
           ))}
@@ -412,6 +558,7 @@ function ChatModelWrapper({
   providersData,
   availableModelsForProvider,
   onSwitchModel,
+  isAggregator,
 }: {
   chat: ChatModel;
   onStatusChange: (id: string, status: ModelStatus) => void;
@@ -420,6 +567,7 @@ function ChatModelWrapper({
   providersData: any;
   availableModelsForProvider: Array<{ name: string; displayName: string }>;
   onSwitchModel: (newModelName: string) => void;
+  isAggregator?: boolean;
 }) {
   return (
     <ChatInterface
@@ -430,6 +578,7 @@ function ChatModelWrapper({
       description={chat.description}
       messages={chat.messages}
       initialStatus={chat.initialStatus}
+      isAggregator={isAggregator}
       onStatusChange={(status) => onStatusChange(chat.id, status)}
       onDelete={() => onDelete(chat.id)}
       providersData={providersData}

@@ -15,6 +15,7 @@ interface ChatInterfaceProps {
   description: string;
   messages?: Message[];
   initialStatus?: ModelStatus;
+  isAggregator?: boolean;
   onStatusChange?: (status: ModelStatus) => void;
   onDelete?: () => void;
   providersData: any;
@@ -106,6 +107,7 @@ export default function ChatInterface({
   description,
   messages = [],
   initialStatus = ModelStatus.READY,
+  isAggregator,
   onStatusChange,
   onDelete,
   providersData,
@@ -144,7 +146,14 @@ export default function ChatInterface({
   const currentDisplayName = availableModelsForProvider.find(m => m.name === modelName)?.displayName || displayName;
 
   return (
-    <div className={`${styles.container} ${styles[status]}`}>
+    <div 
+      className={`
+        ${styles.container} 
+        ${status === ModelStatus.ACTIVE ? styles.active : ''}
+        ${status === ModelStatus.INACTIVE ? styles.inactive : ''}
+        ${isAggregator ? styles.aggregatorCard : ''}
+      `}
+    >
       <div className={styles.header}>
         <button className={styles.deleteButton} onClick={onDelete} aria-label="Remove chat">
           <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
