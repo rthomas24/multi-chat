@@ -10,10 +10,26 @@ import providersData from '@/data/providers.json';
 import { Message } from 'ai';
 import { retrieveApiKey } from '@/utils/apiKeyEncryption';
 
+type ProviderKey = keyof typeof providersData;
+
+const modelDisplayNameMap: Record<string, string> = {
+  'claude-3-5-sonnet-20240620': 'Claude 3.5 Sonnet',
+  'gpt-4o': 'GPT-4o',
+  'gpt-4o-mini': 'GPT-4o Mini',
+  'gpt-3.5-turbo': 'GPT-3.5 Turbo',
+  'grok-3-latest': 'Grok 3 Latest',
+  'grok-3-mini': 'Grok 3 Mini',
+  'gemini-2.5-flash-preview-04-17': 'Gemini 2.5 Flash Preview',
+  'gemini-2.5-pro-preview-05-06': 'Gemini 2.5 Pro Preview',
+  'gemini-2.0-flash': 'Gemini 2.0 Flash',
+  'gemini-2.0-flash-lite': 'Gemini 2.0 Flash-Lite'
+}
+
 interface ChatModel {
   id: string;
-  modelName: string;
-  provider: string;
+  modelName: string; // Actual name for API and providers.json
+  displayName: string; // User-facing name
+  provider: ProviderKey; // Use the more specific type here
   description: string;
   initialStatus: ModelStatus;
   apiRoute: string;
@@ -24,38 +40,42 @@ const initialChatModels: ChatModel[] = [
   {
     id: 'claude-opus-1',
     modelName: 'claude-3-5-sonnet-20240620',
+    displayName: modelDisplayNameMap['claude-3-5-sonnet-20240620'] || 'claude-3-5-sonnet-20240620',
     provider: 'Anthropic',
     description: 'Most capable model for highly complex tasks',
     initialStatus: ModelStatus.READY,
     apiRoute: '/api/chat/anthropic',
-    messages: [
-      { id: '1', role: 'user', content: 'How do you approach complex problems?' },
-      { id: '2', role: 'assistant', content: 'I break them down into smaller, manageable components...' },
-    ],
+    messages: []
   },
   {
     id: 'gpt4-1',
     modelName: 'gpt-4o',
+    displayName: modelDisplayNameMap['gpt-4o'] || 'gpt-4o',
     provider: 'OpenAI',
     description: 'Advanced reasoning and creativity',
     initialStatus: ModelStatus.ACTIVE,
     apiRoute: '/api/chat/openai',
-    messages: [
-      // { id: '3', role: 'user', content: "What's your creative process?" },
-      // { id: '4', role: 'assistant', content: 'I combine existing ideas in novel ways...' },
-    ],
+    messages: []
   },
   {
     id: 'grok-1',
     modelName: 'grok-3-latest',
+    displayName: modelDisplayNameMap['grok-3-latest'] || 'grok-3-latest',
     provider: 'xAI',
     description: 'Real-time knowledge and witty responses',
     initialStatus: ModelStatus.ACTIVE,
     apiRoute: '/api/chat/xai',
-    messages: [
-      // { id: '5', role: 'user', content: 'What makes you unique?' },
-      // { id: '6', role: 'assistant', content: 'I combine real-time knowledge with a dash of wit...' },
-    ],
+    messages: [],
+  },
+  {
+    id: 'gemini-2-flash-1',
+    modelName: 'gemini-2.0-flash',
+    displayName: modelDisplayNameMap['gemini-2.0-flash'] || 'gemini-2.0-flash',
+    provider: 'Google',
+    description: 'Fast and efficient Google model',
+    initialStatus: ModelStatus.ACTIVE,
+    apiRoute: '/api/chat/google',
+    messages: [],
   },
 ];
 
@@ -84,13 +104,32 @@ export default function Home() {
     setChatModels(prev => prev.filter(model => model.id !== id));
   };
 
-  const handleAddModel = (newModel: Omit<ChatModel, 'id' | 'apiRoute' | 'messages'>) => {
-    const apiRoute = `/api/chat/${newModel.provider.toLowerCase()}`;
-    const count = chatModels.filter(m => m.modelName === newModel.modelName).length;
+  const handleSwitchModel = (chatId: string, newModelName: string) => {
+    setChatModels(prevChatModels =>
+      prevChatModels.map(chat => {
+        if (chat.id === chatId) {
+          return {
+            ...chat,
+            modelName: newModelName,
+            displayName: modelDisplayNameMap[newModelName] || newModelName,
+            // Optionally, clear messages or add a system message about model change
+            // messages: [], 
+          };
+        }
+        return chat;
+      })
+    );
+  };
+
+  const handleAddModel = (newModelData: Omit<ChatModel, 'id' | 'apiRoute' | 'messages' | 'displayName'> & { modelName: string }) => {
+    const apiRoute = `/api/chat/${newModelData.provider.toLowerCase()}`;
+    const count = chatModels.filter(m => m.modelName === newModelData.modelName).length;
+    const displayName = modelDisplayNameMap[newModelData.modelName] || newModelData.modelName;
     const newChat: ChatModel = {
-      ...newModel,
-      id: `${newModel.modelName.toLowerCase().replace(/\s+/g, '-')}-${count + 1}`,
+      ...newModelData,
+      id: `${newModelData.modelName.toLowerCase().replace(/[\s.-]+/g, '-')}-${count + 1}`,
       apiRoute,
+      displayName,
       messages: [
         { id: Date.now().toString(), role: 'user', content: 'Hello! What can you help me with?' },
         { id: Date.now().toString(), role: 'assistant', content: "I'm ready to assist you with any questions or tasks..." },
@@ -264,45 +303,8 @@ export default function Home() {
   return (
     <div className={styles.page}>
       <Header />
-      <main className={styles.main}>
+      <div className={styles.contentWrapper}>
         <h1 className={styles.heading}>One question, multiple perspectives</h1>
-        <div className={styles.inputContainer}>
-          <form onSubmit={handleSubmit} className={styles.inputForm}>
-            <input
-              type="text"
-              value={userInput}
-              onChange={handleInputChange}
-              placeholder="Ask anything..."
-              className={styles.input}
-            />
-            <div className={styles.inputActions}>
-              <div className={styles.inputButtons}>
-                <button
-                  type="button"
-                  className={`${styles.webSearchButton} ${webSearchEnabled ? styles.webSearchEnabled : ''}`}
-                  onClick={() => setWebSearchEnabled(!webSearchEnabled)}
-                  title={webSearchEnabled ? "Disable web search" : "Enable web search"}
-                >
-                  <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                    <circle cx="12" cy="12" r="10" />
-                    <line x1="2" y1="12" x2="22" y2="12" />
-                    <path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10z" />
-                  </svg>
-                </button>
-                <button
-                  type="button"
-                  className={styles.addToolsButton}
-                  title="Add Tools"
-                >
-                  Add Tools +
-                </button>
-              </div>
-              <button type="submit" className={styles.sendButton}>
-                Send
-              </button>
-            </div>
-          </form>
-        </div>
         <div className={styles.chatGrid}>
           {chatModels.map((chat, index) => (
             <div
@@ -328,12 +330,56 @@ export default function Home() {
                   setChatModels(prev => prev.map(chat => (chat.id === id ? { ...chat, messages } : chat)))
                 }
                 providersData={providersData}
+                availableModelsForProvider={(
+                  providersData[chat.provider]?.models.map((modelName: string) => ({
+                    name: modelName,
+                    displayName: modelDisplayNameMap[modelName] || modelName,
+                  })) || []
+                )}
+                onSwitchModel={(newModelName) => handleSwitchModel(chat.id, newModelName)}
               />
             </div>
           ))}
           <AddModelCard onModelAdded={handleAddModel} />
         </div>
-      </main>
+      </div>
+      <div className={styles.inputContainer}>
+        <form onSubmit={handleSubmit} className={styles.inputForm}>
+          <input
+            type="text"
+            value={userInput}
+            onChange={handleInputChange}
+            placeholder="Ask anything..."
+            className={styles.input}
+          />
+          <div className={styles.inputActions}>
+            <div className={styles.inputButtons}>
+              <button
+                type="button"
+                className={`${styles.webSearchButton} ${webSearchEnabled ? styles.webSearchEnabled : ''}`}
+                onClick={() => setWebSearchEnabled(!webSearchEnabled)}
+                title={webSearchEnabled ? "Disable web search" : "Enable web search"}
+              >
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                  <circle cx="12" cy="12" r="10" />
+                  <line x1="2" y1="12" x2="22" y2="12" />
+                  <path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10z" />
+                </svg>
+              </button>
+              <button
+                type="button"
+                className={styles.addToolsButton}
+                title="Add Tools"
+              >
+                Add Tools +
+              </button>
+            </div>
+            <button type="submit" className={styles.sendButton}>
+              Send
+            </button>
+          </div>
+        </form>
+      </div>
       <footer className={styles.footer}>
         <a href="https://nextjs.org/learn" className={styles.footerLink}>
           <svg width="16" height="16" viewBox="0 0 24 24" fill="none" className={styles.footerIcon}>
@@ -364,17 +410,22 @@ function ChatModelWrapper({
   onDelete,
   onMessagesUpdate,
   providersData,
+  availableModelsForProvider,
+  onSwitchModel,
 }: {
   chat: ChatModel;
   onStatusChange: (id: string, status: ModelStatus) => void;
   onDelete: (id: string) => void;
   onMessagesUpdate: (id: string, messages: Message[]) => void;
   providersData: any;
+  availableModelsForProvider: Array<{ name: string; displayName: string }>;
+  onSwitchModel: (newModelName: string) => void;
 }) {
   return (
     <ChatInterface
       id={chat.id}
       modelName={chat.modelName}
+      displayName={chat.displayName}
       provider={chat.provider}
       description={chat.description}
       messages={chat.messages}
@@ -382,6 +433,8 @@ function ChatModelWrapper({
       onStatusChange={(status) => onStatusChange(chat.id, status)}
       onDelete={() => onDelete(chat.id)}
       providersData={providersData}
+      availableModelsForProvider={availableModelsForProvider}
+      onSwitchModel={onSwitchModel}
     />
   );
 }

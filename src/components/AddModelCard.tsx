@@ -6,10 +6,12 @@ import Modal from './Modal';
 import ApiKeyForm from './ApiKeyForm';
 import { ModelStatus } from '@/types/Status';
 
+type KnownProviderKey = 'OpenAI' | 'Anthropic' | 'Google' | 'xAI';
+
 interface AddModelCardProps {
   onModelAdded: (model: {
     modelName: string;
-    provider: string;
+    provider: KnownProviderKey;
     description: string;
     initialStatus: ModelStatus;
   }) => void;
@@ -18,20 +20,21 @@ interface AddModelCardProps {
 export default function AddModelCard({ onModelAdded }: AddModelCardProps) {
   const [isModalOpen, setIsModalOpen] = useState(false);
 
-  const handleApiKeySave = (provider: string, modelName: string) => {
+  const handleApiKeySave = (provider: KnownProviderKey, modelName: string) => {
     setIsModalOpen(false);
     
     // Add new model with default description based on provider
-    const descriptions = {
+    const descriptions: Record<KnownProviderKey, string> = {
       'OpenAI': 'Advanced language model for diverse tasks',
       'Anthropic': 'Balanced performance and safety',
-      'Google': 'Multimodal understanding and generation'
+      'Google': 'Multimodal understanding and generation',
+      'xAI': 'Real-time insights and unique interactions'
     };
 
     onModelAdded({
       modelName,
       provider,
-      description: descriptions[provider as keyof typeof descriptions] || 'AI language model',
+      description: descriptions[provider] || 'AI language model',
       initialStatus: ModelStatus.READY
     });
   };

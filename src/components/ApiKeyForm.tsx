@@ -4,13 +4,15 @@ import { useState, useEffect } from 'react';
 import styles from './ApiKeyForm.module.css';
 import providersData from '@/data/providers.json';
 
+type KnownProviderKey = keyof typeof providersData; 
+
 interface ApiKeyFormProps {
   modelName: string;
-  onSave: (provider: string, modelName: string) => void;
+  onSave: (provider: KnownProviderKey, modelName: string) => void;
 }
 
 export default function ApiKeyForm({ modelName, onSave }: ApiKeyFormProps) {
-  const [provider, setProvider] = useState('');
+  const [provider, setProvider] = useState<KnownProviderKey | '' >('');
   const [selectedModel, setSelectedModel] = useState(modelName);
   const [apiKey, setApiKey] = useState('');
   const [isValid, setIsValid] = useState(false);
@@ -22,7 +24,7 @@ export default function ApiKeyForm({ modelName, onSave }: ApiKeyFormProps) {
       data.models.includes(modelName)
     )?.[0];
     if (foundProvider) {
-      setProvider(foundProvider);
+      setProvider(foundProvider as KnownProviderKey);
     }
   }, [modelName]);
 
@@ -45,7 +47,9 @@ export default function ApiKeyForm({ modelName, onSave }: ApiKeyFormProps) {
       const key = `${provider.toLowerCase()}_api_key`;
       localStorage.setItem(key, apiKey);
     }
-    onSave(provider, selectedModel);
+    if (provider) { // Ensure provider is not an empty string before calling onSave
+      onSave(provider, selectedModel);
+    }
   };
 
   return (
@@ -58,7 +62,7 @@ export default function ApiKeyForm({ modelName, onSave }: ApiKeyFormProps) {
           id="provider"
           value={provider}
           onChange={(e) => {
-            setProvider(e.target.value);
+            setProvider(e.target.value as KnownProviderKey | ''); // Cast to KnownProviderKey or empty
             setSelectedModel('');
             setApiKey('');
           }}

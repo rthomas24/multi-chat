@@ -25,16 +25,15 @@
   }
 }
 
-.main {
+.contentWrapper {
   flex: 1;
   display: flex;
   flex-direction: column;
-  align-items: center;
-  justify-content: flex-start;
-  padding: 4rem 2rem;
-  max-width: 1400px;
-  margin: 0 auto;
   width: 100%;
+  padding-top: 2rem;
+  padding-bottom: 7rem;
+  overflow-y: auto;
+  position: relative;
 }
 
 .heading {
@@ -42,44 +41,71 @@
   font-weight: 500;
   margin-bottom: 2rem;
   text-align: center;
+  padding: 0 2rem;
+  width: 100%;
+  max-width: 1200px;
+  margin-left: auto;
+  margin-right: auto;
 }
 
 .inputContainer {
-  width: 100%;
-  max-width: 800px;
-  background: rgba(255, 255, 255, 0.05);
-  border-radius: 12px;
-  padding: 1.5rem;
-  margin-bottom: 2rem;
-  border: 1px solid rgba(255, 255, 255, 0.1);
+  position: fixed;
+  bottom: 20px;
+  left: 50%;
+  transform: translateX(-50%);
+  width: clamp(400px, 70%, 700px);
+  padding: 0.8rem 1rem;
+  background: rgba(40, 40, 40, 0.75);
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+  border-radius: 30px;
+  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  transition: background 0.3s ease-in-out, box-shadow 0.3s ease-in-out;
+  z-index: 1000;
+  display: flex;
+  align-items: center;
+}
+
+.inputContainer:hover,
+.inputContainer:focus-within {
+  background: rgba(55, 55, 55, 0.9);
+  box-shadow: 0 6px 20px rgba(0, 0, 0, 0.25);
 }
 
 .inputForm {
   display: flex;
-  flex-direction: column;
-  gap: 1rem;
+  flex-direction: row;
+  align-items: center;
+  gap: 0.75rem;
+  width: 100%;
 }
 
 .input {
+  flex-grow: 1;
   width: 100%;
-  background: rgba(0, 0, 0, 0.2);
-  border: 1px solid rgba(255, 255, 255, 0.1);
-  border-radius: 8px;
-  padding: 1rem;
-  color: #fff;
+  background: transparent;
+  border: none;
+  border-radius: 0;
+  padding: 0.6rem 0.2rem;
+  color: #e0e0e0;
   font-size: 1rem;
+  outline: none;
+}
+
+.input::placeholder {
+  color: #999;
 }
 
 .input:focus {
-  outline: none;
-  border-color: rgba(0, 180, 216, 0.5);
-  box-shadow: 0 0 0 2px rgba(0, 180, 216, 0.2);
+  border-color: transparent;
+  box-shadow: none;
 }
 
 .inputActions {
   display: flex;
-  justify-content: space-between;
   align-items: center;
+  gap: 0.5rem;
 }
 
 .deepResearchBtn {
@@ -117,12 +143,12 @@
   width: 36px;
   height: 36px;
   border-radius: 50%;
-  background: rgba(255, 255, 255, 0.05);
-  border: 1px solid rgba(255, 255, 255, 0.1);
+  background: transparent;
+  border: none;
   display: flex;
   align-items: center;
   justify-content: center;
-  color: #9ca3af;
+  color: #b0b0b0;
   cursor: pointer;
   transition: all 0.2s ease;
   padding: 0;
@@ -130,24 +156,24 @@
 
 .webSearchButton:hover {
   background: rgba(255, 255, 255, 0.1);
-  color: #e5e7eb;
+  color: #e0e0e0;
 }
 
 .webSearchEnabled {
-  background: rgba(0, 180, 216, 0.2);
-  border-color: rgba(0, 180, 216, 0.5);
+  background: rgba(0, 180, 216, 0.15);
+  border-color: transparent;
   color: #00b4d8;
 }
 
 .webSearchEnabled:hover {
-  background: rgba(0, 180, 216, 0.3);
+  background: rgba(0, 180, 216, 0.25);
 }
 
 .addToolsButton {
-  background: rgba(255, 255, 255, 0.05);
-  border: 1px solid rgba(255, 255, 255, 0.1);
-  border-radius: 18px;
-  color: #9ca3af;
+  background: transparent;
+  border: none;
+  border-radius: 16px;
+  color: #b0b0b0;
   cursor: pointer;
   font-size: 0.85rem;
   padding: 0.5rem 0.75rem;
@@ -158,18 +184,23 @@
 
 .addToolsButton:hover {
   background: rgba(255, 255, 255, 0.1);
-  color: #e5e7eb;
+  color: #e0e0e0;
 }
 
 .sendButton {
   background: #00b4d8;
   color: #fff;
   border: none;
-  padding: 0.5rem 1.5rem;
-  border-radius: 6px;
+  padding: 0.6rem 1.2rem;
+  border-radius: 20px;
   cursor: pointer;
   transition: background 0.2s;
   font-weight: 500;
+  font-size: 0.9rem;
+  height: 38px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
 }
 
 .sendButton:hover {
@@ -333,10 +364,17 @@ a.secondary {
 }
 
 .chatCardWrapper {
-  position: relative;
-  transition: transform 0.2s ease, opacity 0.2s ease;
-  width: 100%;
-  max-width: 100%;
+  background: rgba(255, 255, 255, 0.03);
+  border-radius: 12px;
+  transition: all 0.3s ease;
+  border: 1px solid transparent;
+  width: 410px;
+  flex-shrink: 0;
+  height: auto;
+  max-height: 550px;
+  min-height: 550px;
+  display: flex;
+  flex-direction: column;
 }
 
 .draggable {
@@ -353,19 +391,21 @@ a.secondary {
 }
 
 .chatGrid {
-  display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(450px, 1fr));
-  gap: 2rem;
+  display: flex;
+  flex-direction: row;
+  overflow-x: auto;
+  overflow-y: hidden;
+  gap: 1.5rem;
   width: 100%;
-  margin-top: 3rem;
-  padding: 0 2rem;
-  max-width: 1400px;
+  padding: 1rem 2rem;
+  align-items: stretch;
+  min-height: 450px;
 }
 
 @media (max-width: 1200px) {
   .chatGrid {
-    grid-template-columns: repeat(auto-fill, minmax(400px, 1fr));
-    max-width: 1200px;
+    padding: 1rem;
+    min-height: 430px;
   }
   
   .inputContainer {
@@ -374,21 +414,39 @@ a.secondary {
 }
 
 @media (max-width: 640px) {
-  .chatGrid {
-    grid-template-columns: 1fr;
-    padding: 0 1rem;
-    gap: 1.5rem;
+  .contentWrapper {
+    padding-top: 1rem;
+    padding-bottom: 6rem;
   }
-  
-  .main {
-    padding: 2rem 1rem;
-  }
-  
+
   .heading {
     font-size: 2rem;
+    margin-bottom: 1rem;
+    padding: 0 1rem;
   }
-  
+
+  .chatGrid {
+    padding: 0.5rem 1rem;
+    gap: 1rem;
+    min-height: 400px;
+  }
+
+  .chatCardWrapper {
+    width: 320px;
+    min-height: 380px;
+  }
+
   .inputContainer {
-    padding: 1rem;
+    width: clamp(300px, 90%, 700px);
+    bottom: 10px;
+    padding: 0.6rem 0.8rem;
+  }
+
+  .inputForm {
+    gap: 0.5rem;
+  }
+
+  .input {
+    font-size: 0.9rem;
   }
 } 
