@@ -1,7 +1,7 @@
 # Multi-Chat
 Chat with multiple AI models at once and see how they stack up against each other. Multi-Chat brings together responses from different AI providers in a sleek, easy-to-use interface that lets you compare their answers side by side, while also compiling them into a single, comprehensive final answer.
 
-![multichat](https://github.com/user-attachments/assets/dd1a1a79-ee09-4dfb-aa3b-5e9ada71afab)
+![multichat](https://github.com/user-attachments/assets/bfcd4ef1-b958-4b0c-afc8-24520fc95794)
 
 
 ## Features
