@@ -1,22 +1,27 @@
 # Multi-Chat
-
-Multi-Chat is a Next.js application that allows you to chat with multiple AI models simultaneously. Compare responses from different AI providers side by side in a clean, intuitive interface.
+Chat with multiple AI models at once and see how they stack up against each other. Multi-Chat brings together responses from different AI providers in a sleek, easy-to-use interface that lets you compare their answers side by side, while also compiling them into a single, comprehensive final answer.
 
 ![multichat](https://github.com/user-attachments/assets/dd1a1a79-ee09-4dfb-aa3b-5e9ada71afab)
 
 
 ## Features
 
-- **Multi-Model Chat**: Chat with multiple AI models at the same time
+- **Multi-Model Chat**: Chat with multiple AI models at the same time.
+- **Aggregator Model**: Special chat interface that synthesizes responses from other active models into a final, comprehensive answer.
 - **Supported Providers**: 
   - OpenAI (GPT models)
   - Anthropic (Claude models)
   - Google (Gemini models)
   - xAI (Grok models)
-- **Responsive UI**: Drag and drop interface to organize your chat models
-- **Streaming Responses**: Real-time streaming of AI responses
-- **Code Highlighting**: Automatic syntax highlighting for code blocks
-- **API Key Management**: Securely manage your API keys for different providers
+- **Model Switching**: Easily switch between different models from the same provider within a chat card.
+- **Responsive & Modern UI**: 
+  - Horizontal scrolling for chat cards.
+  - Floating, semi-transparent input bar at the bottom.
+  - Drag and drop interface to organize your chat models.
+- **Streaming Responses**: Real-time streaming of AI responses.
+- **Code Highlighting**: Automatic syntax highlighting for code blocks with copy functionality.
+- **API Key Management**: Securely manage your API keys for different providers.
+- **Web Search Toggle**: Enable or disable web search capabilities for models that support it.
 
 ## Tech Stack
 
@@ -71,14 +76,16 @@ yarn start
 
 ## Usage
 
-1. **Adding Models**: Click the "+" card to add a new AI model to your chat interface
-2. **Managing API Keys**: Click the key icon in the header to manage your API keys
-3. **Chatting**: Type your message in the input field at the top and press Enter to send to all active models
-4. **Model Status**:
-   - Active: Model will receive and respond to messages
-   - Ready: Model is available but won't receive messages
-   - Minimized: Model is collapsed to save space
-5. **Organizing**: Drag and drop chat cards to rearrange them
+1. **Adding Models**: Click the "+" card to add a new AI model to your chat interface.
+2. **Managing API Keys**: When adding a model, you'll be prompted for an API key if one isn't already stored for that provider.
+3. **Chatting**: Type your message in the input field at the bottom and press Enter to send to all active models.
+4. **Aggregator Model**: If an Aggregator model is active, it will automatically collect responses from other active models and provide a synthesized answer.
+5. **Model Status**:
+   - Active: Model will receive and respond to messages.
+   - Ready: Model is available but won't receive messages.
+6. **Organizing**: Drag and drop chat cards to rearrange them.
+7. **Switching Models**: Click the model name in a chat card's header to switch to another model from the same provider.
+8. **Web Search**: Toggle the globe icon in the input bar to enable/disable web search for relevant models.
 
 ## Contributing
 
