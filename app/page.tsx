@@ -26,7 +26,7 @@ const initialChatModels: ChatModel[] = [
     modelName: 'claude-3-5-sonnet-20240620',
     provider: 'Anthropic',
     description: 'Most capable model for highly complex tasks',
-    initialStatus: ModelStatus.ACTIVE,
+    initialStatus: ModelStatus.READY,
     apiRoute: '/api/chat/anthropic',
     messages: [
       { id: '1', role: 'user', content: 'How do you approach complex problems?' },
@@ -38,23 +38,23 @@ const initialChatModels: ChatModel[] = [
     modelName: 'gpt-4o',
     provider: 'OpenAI',
     description: 'Advanced reasoning and creativity',
-    initialStatus: ModelStatus.READY,
+    initialStatus: ModelStatus.ACTIVE,
     apiRoute: '/api/chat/openai',
     messages: [
-      { id: '3', role: 'user', content: "What's your creative process?" },
-      { id: '4', role: 'assistant', content: 'I combine existing ideas in novel ways...' },
+      // { id: '3', role: 'user', content: "What's your creative process?" },
+      // { id: '4', role: 'assistant', content: 'I combine existing ideas in novel ways...' },
     ],
   },
   {
     id: 'grok-1',
-    modelName: 'grok-2-1212',
+    modelName: 'grok-3-latest',
     provider: 'xAI',
     description: 'Real-time knowledge and witty responses',
-    initialStatus: ModelStatus.READY,
+    initialStatus: ModelStatus.ACTIVE,
     apiRoute: '/api/chat/xai',
     messages: [
-      { id: '5', role: 'user', content: 'What makes you unique?' },
-      { id: '6', role: 'assistant', content: 'I combine real-time knowledge with a dash of wit...' },
+      // { id: '5', role: 'user', content: 'What makes you unique?' },
+      // { id: '6', role: 'assistant', content: 'I combine real-time knowledge with a dash of wit...' },
     ],
   },
 ];
@@ -158,7 +158,9 @@ export default function Home() {
     setUserInput('');
 
     activeModels.forEach(model => {
-      const apiKey = retrieveApiKey(model.provider);
+      const storageKey = `${model.provider.toLowerCase()}_api_key`;
+      const apiKey = localStorage.getItem(storageKey);
+
       if (!apiKey) {
         console.error(`No API key found for ${model.provider}`);
         
@@ -232,7 +234,6 @@ export default function Home() {
                 }
                 
                 const chunk = decoder.decode(value, { stream: true });
-                console.log(`Received chunk for ${model.provider}:`, chunk);
                 content += chunk;
                 
                 setChatModels(prev =>
@@ -256,23 +257,10 @@ export default function Home() {
           }
         })
         .catch(error => {
-          console.error(`Error calling ${model.provider} API:`, error);
-          setChatModels(prev =>
-            prev.map(chat =>
-              chat.id === model.id
-                ? {
-                    ...chat,
-                    messages: chat.messages.map(msg =>
-                      msg.id === responseId ? { ...msg, content: `Error: ${error.message}` } : msg
-                    ),
-                  }
-                : chat
-            )
-          );
+          console.error(`Error submitting request to ${model.provider}:`, error);
         });
     });
   };
-
   return (
     <div className={styles.page}>
       <Header />

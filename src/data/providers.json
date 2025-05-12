@@ -15,7 +15,7 @@
     "logo": "/google.png"
   },
   "xAI": {
-    "models": ["grok-2-1212"],
+    "models": ["grok-3-latest", "grok-3-mini"],
     "keyPrefix": "xai-",
     "logo": "/xai.png"
   }

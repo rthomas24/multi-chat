@@ -51,10 +51,14 @@ export async function POST(req: Request) {
           content: 'You are a helpful AI assistant. You aim to provide accurate, relevant, and well-reasoned responses while being direct and concise. You will maintain a professional and friendly tone throughout our conversation.',
         },
         ...messages
-      ]
+      ],
+      onError: ({ error }) => {
+        // Server-side logging: Log errors from onError callback
+        console.error('[Google API] Error in streamText onError:', error);
+      },
     });
 
-    return new Response(result.textStream);
+    return result.toTextStreamResponse();
   } catch (error) {
     // Improve error logging without exposing sensitive information
     console.error('Error calling Google API:', error instanceof Error ? error.message : 'Unknown error');

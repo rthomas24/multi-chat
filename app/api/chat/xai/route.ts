@@ -42,7 +42,7 @@ export async function POST(req: Request) {
     
     const xai = createXai({ apiKey });
     const result = streamText({
-      model: xai(model || 'grok-2-1212'),
+      model: xai(model || 'grok-3-latest'),
       messages: [
         {
           role: 'system',
@@ -50,6 +50,10 @@ export async function POST(req: Request) {
         },
         ...messages,
       ],
+      onError: ({ error }) => {
+        // Server-side logging: Log errors from onError callback
+        console.error('[xAI API] Error in streamText onError:', error);
+      },
     });
     return new Response(result.textStream);
   } catch (error) {

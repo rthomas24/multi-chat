@@ -18,8 +18,6 @@ export async function POST(req: Request) {
   }
 
   const { messages, model } = data;
-  
-  // Validate messages
   if (!Array.isArray(messages) || messages.length === 0) {
     return new Response(
       JSON.stringify({ error: 'Invalid or empty messages array' }),
@@ -50,11 +48,13 @@ export async function POST(req: Request) {
         },
         ...messages,
       ],
+      onError: ({ error }) => {
+        // Server-side logging: Log errors from onError callback
+        console.error('[Anthropic API] Error in streamText onError:', error);
+      },
     });
-    return new Response(result.textStream);
+    return result.toTextStreamResponse();
   } catch (error) {
-    // Improve error logging without exposing sensitive information
-    console.error('Error calling Anthropic API:', error instanceof Error ? error.message : 'Unknown error');
     
     return new Response(
       JSON.stringify({

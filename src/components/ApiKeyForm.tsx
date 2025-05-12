@@ -79,7 +79,7 @@ export default function ApiKeyForm({ modelName, onSave }: ApiKeyFormProps) {
           disabled={!provider}
         >
           <option value="">Select Model</option>
-          {provider && providersData[provider].models.map(model => (
+          {provider && providersData[provider as keyof typeof providersData].models.map((model: string) => (
             <option key={model} value={model}>{model}</option>
           ))}
         </select>
@@ -93,7 +93,7 @@ export default function ApiKeyForm({ modelName, onSave }: ApiKeyFormProps) {
             type="password"
             value={apiKey}
             onChange={(e) => setApiKey(e.target.value)}
-            placeholder={provider ? `Enter ${providersData[provider].keyPrefix}...` : 'Enter API Key'}
+            placeholder={provider ? `Enter ${providersData[provider as keyof typeof providersData].keyPrefix}...` : 'Enter API Key'}
           />
         </div>
       )}

@@ -31,7 +31,7 @@ export default function AddModelCard({ onModelAdded }: AddModelCardProps) {
     onModelAdded({
       modelName,
       provider,
-      description: descriptions[provider] || 'AI language model',
+      description: descriptions[provider as keyof typeof descriptions] || 'AI language model',
       initialStatus: ModelStatus.READY
     });
   };

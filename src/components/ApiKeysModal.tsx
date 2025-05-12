@@ -3,7 +3,6 @@
 import { useState, useEffect } from 'react';
 import styles from './ApiKeysModal.module.css';
 import Modal from './Modal';
-import { storeApiKey, retrieveApiKey, removeApiKey } from '@/utils/apiKeyEncryption';
 
 interface ApiKeysModalProps {
   isOpen: boolean;
@@ -22,8 +21,8 @@ export default function ApiKeysModal({ isOpen, onClose, providersData }: ApiKeys
       const initialShowState: Record<string, boolean> = {};
       
       Object.keys(providersData).forEach(provider => {
-        // Use the new utility to retrieve and decrypt the API key
-        const key = retrieveApiKey(provider) || '';
+        const storageKey = `${provider.toLowerCase()}_api_key`;
+        const key = localStorage.getItem(storageKey) || '';
         keys[provider] = key;
         initialShowState[provider] = false;
       });
@@ -50,11 +49,11 @@ export default function ApiKeysModal({ isOpen, onClose, providersData }: ApiKeys
   const saveKeys = () => {
     Object.entries(apiKeys).forEach(([provider, key]) => {
       if (key) {
-        // Use the new utility to encrypt and store the API key
-        storeApiKey(provider, key);
+        const storageKey = `${provider.toLowerCase()}_api_key`;
+        localStorage.setItem(storageKey, key);
       } else {
-        // Use the new utility to remove the API key
-        removeApiKey(provider);
+        const storageKey = `${provider.toLowerCase()}_api_key`;
+        localStorage.removeItem(storageKey);
       }
     });
     onClose();
