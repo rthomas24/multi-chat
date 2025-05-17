@@ -1,40 +1,57 @@
 .header {
-  width: 100%;
+  background: rgba(255, 255, 255, 0.05);
+  padding: 0.75rem 1.5rem;
   border-bottom: 1px solid rgba(255, 255, 255, 0.1);
-  padding: 1rem;
+  position: sticky;
+  top: 0;
+  z-index: 100;
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
 }
 
 .headerContent {
-  max-width: 1200px;
-  margin: 0 auto;
   display: flex;
-  justify-content: space-between;
   align-items: center;
+  justify-content: space-between;
+  width: 100%;
+  max-width: 100%;
+  margin: 0 auto;
 }
 
 .logo {
-  font-weight: 600;
   font-size: 1.25rem;
+  font-weight: 600;
   color: #fff;
+  flex-shrink: 0;
+}
+
+.centerContent {
+  flex-grow: 1;
+  display: flex;
+  justify-content: center;
 }
 
 .nav {
   display: flex;
-  gap: 1rem;
   align-items: center;
+  gap: 0.75rem;
+  flex-shrink: 0;
 }
 
 .navButton {
   background: transparent;
   border: none;
-  color: #9ca3af;
+  color: #adb5bd;
   padding: 0.5rem;
-  cursor: pointer;
   border-radius: 6px;
-  transition: all 0.2s;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.2s ease;
 }
 
 .navButton:hover {
-  color: #fff;
   background: rgba(255, 255, 255, 0.1);
+  color: #fff;
 } 

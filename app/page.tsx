@@ -9,6 +9,7 @@ import AddModelCard from '@/components/AddModelCard';
 import providersData from '@/data/providers.json';
 import { Message } from 'ai';
 import { retrieveApiKey } from '@/utils/apiKeyEncryption';
+import ImageGenerationGallery from '@/components/ImageGenerationGallery';
 
 type ProviderKey = keyof typeof providersData;
 
@@ -253,8 +254,11 @@ export default function Home() {
   const [isDragging, setIsDragging] = useState(false);
   const longPressTimeoutRef = useRef<NodeJS.Timeout | null>(null);
   const dragItemRef = useRef<number | null>(null);
+  const [currentMode, setCurrentMode] = useState<'chat' | 'pictures'>('chat');
+  const [imagePrompt, setImagePrompt] = useState('');
 
-  const activeModels = chatModels.filter(model => model.initialStatus === ModelStatus.ACTIVE);
+  const aggregatorModel = chatModels.find(model => model.isAggregator);
+  const regularModels = chatModels.filter(model => !model.isAggregator);
 
   const handleStatusChange = (id: string, newStatus: ModelStatus) => {
     setChatModels(prev =>
@@ -332,16 +336,26 @@ export default function Home() {
     const dragIndex = dragItemRef.current;
     if (dragIndex === null || dragIndex === dropIndex) return;
     setChatModels(prev => {
-      const items = [...prev];
+      const currentRegularModels = prev.filter(m => !m.isAggregator);
+      const currentAggregatorModel = prev.find(m => m.isAggregator);
+      
+      const items = [...currentRegularModels];
       const [movedItem] = items.splice(dragIndex, 1);
       items.splice(dropIndex, 0, movedItem);
-      return items;
+      
+      return currentAggregatorModel ? [...items, currentAggregatorModel].sort(sortByStatus) : items.sort(sortByStatus);
     });
     endDrag();
   };
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     setUserInput(e.target.value);
+  };
+
+  const handleModeToggle = () => {
+    setCurrentMode(prevMode => prevMode === 'chat' ? 'pictures' : 'chat');
+    // Potentially clear messages or reset UI elements based on mode change later
+    console.log("Mode switched to: ", currentMode === 'chat' ? 'pictures' : 'chat'); 
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -447,85 +461,123 @@ export default function Home() {
 
   return (
     <div className={styles.page}>
-      <Header />
+      <Header currentMode={currentMode} onModeToggle={handleModeToggle} />
       <div className={styles.contentWrapper}>
-        <h1 className={styles.heading}>One question, multiple perspectives</h1>
-        <div className={styles.chatGrid}>
-          {chatModels.map((chat, index) => (
-            <div
-              key={chat.id}
-              className={`${styles.chatCardWrapper} ${isDragging ? styles.draggable : ''} ${
-                dragItemRef.current === index ? styles.dragging : ''
-              }`}
-              draggable={isDragging}
-              onMouseDown={() => handleLongPressStart(index)}
-              onMouseUp={endDrag}
-              onMouseLeave={endDrag}
-              onTouchStart={() => handleLongPressStart(index)}
-              onTouchEnd={endDrag}
-              onDragStart={(e) => handleDragStart(e, index)}
-              onDragOver={handleDragOver}
-              onDrop={(e) => handleDrop(e, index)}
-            >
-              <ChatModelWrapper
-                chat={chat}
-                onStatusChange={handleStatusChange}
-                onDelete={handleDelete}
-                onMessagesUpdate={(id, messages) =>
-                  setChatModels(prev => prev.map(chat => (chat.id === id ? { ...chat, messages } : chat)))
-                }
-                providersData={providersData}
-                availableModelsForProvider={(
-                  providersData[chat.provider]?.models.map((modelName: string) => ({
-                    name: modelName,
-                    displayName: modelDisplayNameMap[modelName] || modelName,
-                  })) || []
-                )}
-                onSwitchModel={(newModelName) => handleSwitchModel(chat.id, newModelName)}
-                isAggregator={chat.isAggregator}
-              />
+        {currentMode === 'chat' ? (
+          <>
+            <h1 className={styles.heading}>
+              One question, multiple perspectives
+            </h1>
+            <div className={styles.mainLayoutContainer}>
+              {aggregatorModel && (
+                <div className={styles.aggregatorContainer}>
+                  <ChatModelWrapper
+                    chat={aggregatorModel}
+                    onStatusChange={handleStatusChange}
+                    onDelete={handleDelete}
+                    onMessagesUpdate={(id, messages) =>
+                      setChatModels(prev => prev.map(chat => (chat.id === id ? { ...chat, messages } : chat)))
+                    }
+                    providersData={providersData}
+                    availableModelsForProvider={(
+                      providersData[aggregatorModel.provider]?.models.map((modelName: string) => ({
+                        name: modelName,
+                        displayName: modelDisplayNameMap[modelName] || modelName,
+                      })) || []
+                    )}
+                    onSwitchModel={(newModelName) => handleSwitchModel(aggregatorModel.id, newModelName)}
+                    isAggregator={aggregatorModel.isAggregator}
+                  />
+                </div>
+              )}
+              <div className={styles.chatGridContainer}>
+                <div className={styles.chatGrid}>
+                  {regularModels.map((chat, index) => (
+                    <div
+                      key={chat.id}
+                      className={`${styles.chatCardWrapper} ${isDragging ? styles.draggable : ''} ${
+                        dragItemRef.current === index ? styles.dragging : ''
+                      }`}
+                      draggable={isDragging}
+                      onMouseDown={() => handleLongPressStart(index)}
+                      onMouseUp={endDrag}
+                      onMouseLeave={endDrag}
+                      onTouchStart={() => handleLongPressStart(index)}
+                      onTouchEnd={endDrag}
+                      onDragStart={(e) => handleDragStart(e, index)}
+                      onDragOver={handleDragOver}
+                      onDrop={(e) => handleDrop(e, index)}
+                    >
+                      <ChatModelWrapper
+                        chat={chat}
+                        onStatusChange={handleStatusChange}
+                        onDelete={handleDelete}
+                        onMessagesUpdate={(id, messages) =>
+                          setChatModels(prev => prev.map(chat => (chat.id === id ? { ...chat, messages } : chat)))
+                        }
+                        providersData={providersData}
+                        availableModelsForProvider={(
+                          providersData[chat.provider]?.models.map((modelName: string) => ({
+                            name: modelName,
+                            displayName: modelDisplayNameMap[modelName] || modelName,
+                          })) || []
+                        )}
+                        onSwitchModel={(newModelName) => handleSwitchModel(chat.id, newModelName)}
+                        isAggregator={chat.isAggregator}
+                      />
+                    </div>
+                  ))}
+                  <AddModelCard onModelAdded={handleAddModel} />
+                </div>
+              </div>
             </div>
-          ))}
-          <AddModelCard onModelAdded={handleAddModel} />
-        </div>
-      </div>
-      <div className={styles.inputContainer}>
-        <form onSubmit={handleSubmit} className={styles.inputForm}>
-          <input
-            type="text"
-            value={userInput}
-            onChange={handleInputChange}
-            placeholder="Ask anything..."
-            className={styles.input}
+          </>
+        ) : (
+          <ImageGenerationGallery
+            imagePrompt={imagePrompt}
+            setImagePrompt={setImagePrompt}
           />
-          <div className={styles.inputActions}>
-            <div className={styles.inputButtons}>
-              <button
-                type="button"
-                className={`${styles.webSearchButton} ${webSearchEnabled ? styles.webSearchEnabled : ''}`}
-                onClick={() => setWebSearchEnabled(!webSearchEnabled)}
-                title={webSearchEnabled ? "Disable web search" : "Enable web search"}
-              >
-                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                  <circle cx="12" cy="12" r="10" />
-                  <line x1="2" y1="12" x2="22" y2="12" />
-                  <path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10z" />
-                </svg>
-              </button>
-              <button
-                type="button"
-                className={styles.addToolsButton}
-                title="Add Tools"
-              >
-                Add Tools +
+        )}
+      </div>
+      {currentMode === 'chat' && (
+        <div className={styles.inputContainer}>
+          <form onSubmit={handleSubmit} className={styles.inputForm}>
+            <input
+              type="text"
+              value={userInput}
+              onChange={handleInputChange}
+              placeholder="Ask anything..."
+              className={styles.input}
+            />
+            <div className={styles.inputActions}>
+              <div className={styles.inputButtons}>
+                <button
+                  type="button"
+                  className={`${styles.webSearchButton} ${webSearchEnabled ? styles.webSearchEnabled : ''}`}
+                  onClick={() => setWebSearchEnabled(!webSearchEnabled)}
+                  title={webSearchEnabled ? "Disable web search" : "Enable web search"}
+                >
+                  <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                    <circle cx="12" cy="12" r="10" />
+                    <line x1="2" y1="12" x2="22" y2="12" />
+                    <path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10z" />
+                  </svg>
+                </button>
+                <button
+                  type="button"
+                  className={styles.addToolsButton}
+                  title="Add Tools"
+                >
+                  Add Tools +
+                </button>
+              </div>
+              <button type="submit" className={styles.sendButton}>
+                Send
               </button>
             </div>
-            <button type="submit" className={styles.sendButton}>
-              Send
-            </button>
-          </div>
-        </form>
-      </div>
+          </form>
+        </div>
+      )}
       <footer className={styles.footer}>
         <a href="https://nextjs.org/learn" className={styles.footerLink}>
           <svg width="16" height="16" viewBox="0 0 24 24" fill="none" className={styles.footerIcon}>

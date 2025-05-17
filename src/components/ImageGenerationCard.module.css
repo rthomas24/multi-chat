@@ -1,0 +1,91 @@
+.card {
+  background-color: #1a1a1a; /* Dark background like in the image */
+  border-radius: 12px;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+  width: 280px; /* Fixed width for consistency */
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.3);
+}
+
+.header {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 1rem;
+  background: rgba(255, 255, 255, 0.03);
+  border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+}
+
+.providerIcon {
+  width: 20px;
+  height: 20px;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.1);
+}
+
+.modelName {
+  font-size: 1rem;
+  font-weight: 500;
+  color: white;
+}
+
+.imageContainer {
+  width: 100%;
+  height: 280px; /* 1:1 aspect ratio */
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden;
+  background-color: #101010;
+}
+
+.image {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.actions {
+  display: flex;
+  padding: 0.75rem;
+  gap: 0.75rem;
+  background: rgba(0, 0, 0, 0.3);
+}
+
+.actionButton {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  background: rgba(255, 255, 255, 0.05);
+  color: white;
+  border: none;
+  border-radius: 6px;
+  padding: 0.6rem 0;
+  font-size: 0.9rem;
+  cursor: pointer;
+  transition: background-color 0.2s ease;
+}
+
+.actionButton:hover {
+  background: rgba(255, 255, 255, 0.1);
+}
+
+.regenerateButton {
+  width: 100%;
+  background: rgba(0, 0, 0, 0.3);
+  color: white;
+  border: none;
+  padding: 0.75rem;
+  font-size: 0.9rem;
+  cursor: pointer;
+  transition: background-color 0.2s ease;
+  border-top: 1px solid rgba(255, 255, 255, 0.06);
+}
+
+.regenerateButton:hover {
+  background: rgba(0, 0, 0, 0.5);
+} 

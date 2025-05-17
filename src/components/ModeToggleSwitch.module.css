@@ -1,0 +1,75 @@
+.toggleSwitch {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  justify-content: space-around; /* Distribute space for icons */
+  width: 120px; /* Adjusted width for icons */
+  height: 38px;
+  background-color: rgba(255, 255, 255, 0.1);
+  border-radius: 20px;
+  cursor: pointer;
+  border: 1px solid rgba(255, 255, 255, 0.15);
+  padding: 4px;
+  transition: background-color 0.3s ease;
+  overflow: hidden;
+}
+
+.slider {
+  position: absolute;
+  top: 4px;
+  bottom: 4px;
+  left: 4px;
+  width: calc(50% - 4px); /* Half width minus its own padding */
+  background-color: #00b4d8;
+  border-radius: 16px;
+  transition: transform 0.3s cubic-bezier(0.25, 0.8, 0.25, 1);
+  z-index: 0; /* Behind icons */
+}
+
+.iconContainer {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 50%; /* Each icon container takes half the width */
+  height: 100%;
+  z-index: 1; /* Above slider */
+  transition: color 0.3s ease;
+}
+
+.iconContainer svg {
+  transition: opacity 0.3s ease;
+}
+
+/* Positioning the slider */
+.chatActive .slider {
+  transform: translateX(0%);
+}
+
+.picturesActive .slider {
+  transform: translateX(calc(100%)); /* Move one full icon width */
+}
+
+/* Icon colors - Active state (not covered by slider) */
+.chatActive .chatIconContainer svg {
+  color: #ffffff; /* Bright when chat is active */
+  opacity: 1;
+}
+.picturesActive .picturesIconContainer svg {
+  color: #ffffff; /* Bright when pictures is active */
+  opacity: 1;
+}
+
+/* Icon colors - Inactive state (not covered by slider) */
+.chatActive .picturesIconContainer svg {
+  color: #a0a0a0; /* Dimmed when chat is active */
+  opacity: 0.7;
+}
+.picturesActive .chatIconContainer svg {
+  color: #a0a0a0; /* Dimmed when pictures is active */
+  opacity: 0.7;
+}
+
+/* Remove old text styles if they exist - they are no longer used */
+.modeText, .chatText, .picturesText {
+    display: none;
+} 

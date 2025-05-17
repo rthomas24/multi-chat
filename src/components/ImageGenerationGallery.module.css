@@ -1,0 +1,112 @@
+.container {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  width: 100%;
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 0 1rem;
+}
+
+.heading {
+  font-size: 2.5rem;
+  font-weight: 500;
+  text-align: center;
+  margin-bottom: 0.5rem;
+  color: white;
+}
+
+.subheading {
+  color: #9ca3af;
+  text-align: center;
+  margin-bottom: 2rem;
+  font-size: 1.1rem;
+}
+
+.galleryGrid {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 1rem;
+  margin-bottom: 5rem; /* Space for the prompt input */
+  width: 100%;
+}
+
+.promptContainer {
+  position: fixed;
+  bottom: 20px;
+  left: 50%;
+  transform: translateX(-50%);
+  width: clamp(400px, 70%, 700px);
+  z-index: 1000;
+}
+
+.promptForm {
+  width: 100%;
+}
+
+.promptInput {
+  width: 100%;
+  padding: 0.8rem 1rem;
+  background: rgba(40, 40, 40, 0.75);
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+  border-radius: 30px;
+  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  color: #e0e0e0;
+  font-size: 1rem;
+  outline: none;
+  transition: all 0.3s ease;
+}
+
+.promptInput:hover,
+.promptInput:focus {
+  background: rgba(55, 55, 55, 0.9);
+  border-color: rgba(255, 255, 255, 0.15);
+  box-shadow: 0 6px 20px rgba(0, 0, 0, 0.25);
+}
+
+.promptInput::placeholder {
+  color: #999;
+}
+
+@media (max-width: 1200px) {
+  .galleryGrid {
+    gap: 1.5rem;
+  }
+}
+
+@media (max-width: 768px) {
+  .heading {
+    font-size: 2rem;
+  }
+  
+  .subheading {
+    font-size: 1rem;
+  }
+  
+  .promptContainer {
+    width: clamp(300px, 90%, 600px);
+  }
+}
+
+@media (max-width: 640px) {
+  .heading {
+    font-size: 1.8rem;
+  }
+  
+  .galleryGrid {
+    gap: 1rem;
+  }
+  
+  .promptContainer {
+    width: clamp(280px, 90%, 500px);
+    bottom: 15px;
+  }
+  
+  .promptInput {
+    padding: 0.7rem 0.9rem;
+    font-size: 0.9rem;
+  }
+} 
